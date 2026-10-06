@@ -4,9 +4,27 @@ export default class GameScene extends Phaser.Scene {
     }
 
     create() {
-        this.player = this.physics.add.sprite(240, 135, 'player', 0);
+        const map = this.make.tilemap({ key: 'hazy-forest' });
+        const tiles = map.addTilesetImage('forest', 'forest-tiles');
+
+        map.createLayer('ground', tiles);
+        map.createLayer('decor', tiles);
+        this.collisionLayer = map.createLayer('collision', tiles);
+
+        this.player = this.physics.add.sprite(map.widthInPixels / 2, map.heightInPixels / 2, 'player', 0);
         this.speed = 60;
         this.facing = 'down';
+
+        map.createLayer('above', tiles);
+
+        this.collisionLayer.setCollisionByExclusion([-1]);
+        this.physics.add.collider(this.player, this.collisionLayer);
+
+        this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+        this.player.setCollideWorldBounds(true);
+
+        this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+        this.cameras.main.startFollow(this.player);
 
         this.cursors = this.input.keyboard.createCursorKeys();
         this.keys = this.input.keyboard.addKeys('W,A,S,D');

@@ -10,6 +10,9 @@ export default class BootScene extends Phaser.Scene {
             frameWidth: 16,
             frameHeight: 16
         });
+
+        this.load.image('forest-tiles', 'assets/tilesets/forest.png');
+        this.load.tilemapTiledJSON('hazy-forest', 'assets/maps/hazy-forest.tmj');
     }
 
     create() {
