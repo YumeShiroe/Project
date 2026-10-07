@@ -1,3 +1,5 @@
+import { FUNGI } from '../data/fungi.js';
+
 export default class GameScene extends Phaser.Scene {
     constructor() {
         super('GameScene');
@@ -14,6 +16,23 @@ export default class GameScene extends Phaser.Scene {
         this.player = this.physics.add.sprite(map.widthInPixels / 2, map.heightInPixels / 2, 'player', 0);
         this.speed = 60;
         this.facing = 'down';
+
+        const testFungi = ['swift', 'gold', 'regeneration', 'GlimpseofHope'];
+        for (let i = 0; i < testFungi.length; i++) {
+            const data = FUNGI[testFungi[i]];
+            const fungus = this.add.sprite(this.player.x - 36 + i * 24, this.player.y + 30, 'fungi', data.frame);
+
+            if (data.glow !== null) {
+                const glow = fungus.preFX.addGlow(data.flow, 4, 0);
+                this.tweens.add({
+                    targets: glow,
+                    outerStrength: 1,
+                    duration: 900,
+                    yoyo: true,
+                    repeat: -1
+                });
+            }
+        }
 
         map.createLayer('above', tiles);
 

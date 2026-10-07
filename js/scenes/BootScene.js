@@ -13,6 +13,11 @@ export default class BootScene extends Phaser.Scene {
 
         this.load.image('forest-tiles', 'assets/tilesets/forest.png');
         this.load.tilemapTiledJSON('hazy-forest', 'assets/maps/hazy-forest.tmj');
+
+        this.load.spritesheet('fungi', 'assets/sprites/fungi.png', {
+            frameWidth: 16,
+            frameHeight: 16
+        });
     }
 
     create() {
