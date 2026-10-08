@@ -4,6 +4,7 @@ export default class Inventory {
         this. unlockedInventorySlots = unlockedInventorySlots;
         this.stackSize = stackSize;
         this.coins = 0;
+        this.events = new Phaser.events.EventEmitter();
 
         this.slots = [];
         for (let i = 0; i < totalInventorySlots; i++) {

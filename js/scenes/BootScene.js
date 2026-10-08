@@ -1,6 +1,7 @@
 // Placeholder to check whether scene works.
 
 import Inventory from '../features/inventory.js';
+import Hotbar from '../features/hotbar.js';
 
 export default class BootScene extends Phaser.Scene {
     constructor() {
@@ -47,7 +48,11 @@ export default class BootScene extends Phaser.Scene {
             repeat: -1
         });
 
-        this.registry.set('inventory', new Inventory())
+        const inventory = new Inventory();
+        
+        this.registry.set('inventory', inventory);
+        this.registry.set('hotbar', new Hotbar(inventory));
+        this.registry.set('learned', new Set());
         
         this.scene.start('GameScene');
     }
