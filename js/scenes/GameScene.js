@@ -1,14 +1,8 @@
 import { FUNGI } from '../data/fungi.js';
 import { REGIONS } from '../data/region.js';
+import { pixelText } from '../ui/style.js';
 
 const noSpawnTile = [4, 5];
-
-const pixelText = {
-    fontFamily: '"Press Start 2P"',
-    fontSize: '8px',
-    color: '#ffffff',
-    resolution: 1
-};
 
 export default class GameScene extends Phaser.Scene {
     constructor() {
@@ -41,7 +35,7 @@ export default class GameScene extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
         this.keys = this.input.keyboard.addKeys('W,A,S,D');
 
-        this.inventory = {};
+        this.inventory = this.registry.get('inventory');
         this.fungiPickupReach = 20;
         this.keyE = this.input.keyboard.addKey('E');
         this.holdTime = 0;
@@ -55,6 +49,12 @@ export default class GameScene extends Phaser.Scene {
         this.aboveLayer.setDepth(10000);
         this.fungiGroup = this.physics.add.staticGroup();
         this.spawnFungi(REGIONS.hazyForest);
+
+        this.input.keyboard.on('keydown-I', () => {
+            this.scene.launch('InventoryScene');
+            this.scene.pause();
+        });
+        this.events.on('resume', () => this.input.keyboard.resetKeys());
     }
 
     update(time, delta) {
@@ -188,7 +188,8 @@ export default class GameScene extends Phaser.Scene {
             return;
         }
         const id = fungus.fungusId;
-        this.inventory[id] = (this.inventory[id] || 0) + 1;
+        if (!this.inventory.addItem(id))
+            return;
 
         const label = this.add.text(fungus.x, fungus.y - 8, '+1 ' + FUNGI[id].name, {
             ...pixelText,
@@ -220,12 +221,12 @@ export default class GameScene extends Phaser.Scene {
 
         const key = this.add.text(-17, 0, 'E', pixelText).setOrigin(0.5);
 
-        const label = this.add.text(-8, 0, 'Hold', {
+        this.promptLabel = this.add.text(-8, 0, 'Hold', {
             ...pixelText,
             color: '#c0cbdc',
         }).setOrigin(0, 0.5);
 
-        this.prompt.add([background, this.promptRing, key, label]);
+        this.prompt.add([background, this.promptRing, key, this.promptLabel]);
     }
 
     drawPromptRing(progress) {
@@ -255,6 +256,18 @@ export default class GameScene extends Phaser.Scene {
         }
         this.prompt.setVisible(true);
         this.prompt.setPosition(target.x, target.y - 16);
+
+        const hasEnoughRoom = this.inventory.ableToAdd(target.fungusId);
+        if (hasEnoughRoom) {
+            this.promptLabel.setText('Hold');
+        } else {
+            this.promptLabel.setText('Full');
+        }
+        if (!hasEnoughRoom) {
+            this.holdTime = 0;
+            this.drawPromptRing(0);
+            return;
+        }
 
         const holding = this.keyE.isDown || this.pointerHolding === target;
         if (holding) {

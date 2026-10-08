@@ -1,5 +1,6 @@
 import BootScene from './scenes/BootScene.js';
 import GameScene from './scenes/GameScene.js';
+import InventoryScene from './scenes/InventoryScene.js';
 
 const config = {
     type: Phaser.AUTO,
@@ -18,7 +19,7 @@ const config = {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
     },
-    scene: [BootScene, GameScene]
+    scene: [BootScene, GameScene, InventoryScene]
 };
 
 document.fonts.load('8px "Press Start 2P"').then(() => {

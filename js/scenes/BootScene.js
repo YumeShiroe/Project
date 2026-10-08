@@ -1,5 +1,7 @@
 // Placeholder to check whether scene works.
 
+import Inventory from '../features/inventory.js';
+
 export default class BootScene extends Phaser.Scene {
     constructor() {
         super('BootScene');
@@ -13,6 +15,9 @@ export default class BootScene extends Phaser.Scene {
 
         this.load.image('forest-tiles', 'assets/tilesets/forest.png');
         this.load.tilemapTiledJSON('hazy-forest', 'assets/maps/hazy-forest.tmj');
+
+        this.load.image('inventory-ui', 'assets/UI/inventory.png');
+        this.load.image('lock', 'assets/UI/lock.png');
 
         this.load.spritesheet('fungi', 'assets/sprites/fungi.png', {
             frameWidth: 16,
@@ -42,6 +47,7 @@ export default class BootScene extends Phaser.Scene {
             repeat: -1
         });
 
+        this.registry.set('inventory', new Inventory())
         
         this.scene.start('GameScene');
     }
