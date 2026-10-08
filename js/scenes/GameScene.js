@@ -3,6 +3,13 @@ import { REGIONS } from '../data/region.js';
 
 const noSpawnTile = [4, 5];
 
+const pixelText = {
+    fontFamily: '"Press Start 2P"',
+    fontSize: '8px',
+    color: '#ffffff',
+    resolution: 1
+};
+
 export default class GameScene extends Phaser.Scene {
     constructor() {
         super('GameScene');
@@ -34,12 +41,23 @@ export default class GameScene extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
         this.keys = this.input.keyboard.addKeys('W,A,S,D');
 
+        this.inventory = {};
+        this.fungiPickupReach = 20;
+        this.keyE = this.input.keyboard.addKey('E');
+        this.holdTime = 0;
+        this.holdTarget = null;
+        this.pointerHolding = null;
+        this.createPickupPrompt();
+        this.input.on('pointerup', () => {
+            this.pointerHolding = null;
+        });
+
         this.aboveLayer.setDepth(10000);
         this.fungiGroup = this.physics.add.staticGroup();
         this.spawnFungi(REGIONS.hazyForest);
     }
 
-    update() {
+    update(time, delta) {
         const left = this.cursors.left.isDown || this.keys.A.isDown;
         const right = this.cursors.right.isDown || this.keys.D.isDown;
         const up = this.cursors.up.isDown || this.keys.W.isDown;
@@ -74,6 +92,7 @@ export default class GameScene extends Phaser.Scene {
             const idleFrames = { down: 0, up: 3, side: 6 };
             this.player.setFrame(idleFrames[this.facing]);
         }
+        this.updatePickup(delta);
     }
 
     pickWeighted(table) {
@@ -139,6 +158,121 @@ export default class GameScene extends Phaser.Scene {
                 repeat: -1
             });
         }
+
+        fungus.setInteractive();
+        fungus.on('pointerdown', () => {
+            this.pointerHolding = fungus;
+        });
+
         return fungus;
     }
+
+    nearestPickupableFungus() {
+        let best = null;
+        let bestDistance = this.fungiPickupReach;
+        const list = this.fungiGroup.getChildren();
+
+        for (let i = 0; i < list.length; i++) {
+            const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, list[i].x, list[i].y);
+            if (distance <= bestDistance) {
+                best = list[i];
+                bestDistance = distance;
+            }
+        }
+        return best;
+    }
+
+    fungusPickup(fungus) {
+        const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, fungus.x, fungus.y);
+        if (distance > this.fungiPickupReach) {
+            return;
+        }
+        const id = fungus.fungusId;
+        this.inventory[id] = (this.inventory[id] || 0) + 1;
+
+        const label = this.add.text(fungus.x, fungus.y - 8, '+1 ' + FUNGI[id].name, {
+            ...pixelText,
+            stroke: '#181425',
+            strokeThickness: 2
+        }).setOrigin(0.5).setDepth(20000);
+
+        this.tweens.add({
+            targets: label,
+            y: label.y - 14,
+            alpha: 0,
+            duration: 900,
+            onComplete: () => label.destroy()
+        });
+
+        fungus.destroy();
+    }
+
+    createPickupPrompt() {
+        this.prompt = this.add.container(0, 0).setDepth(20000).setVisible(false);
+
+        const background = this.add.graphics();
+        background.fillStyle(0x181425, 0.85);
+        background.fillRoundedRect(-26, -9, 52, 18, 4);
+        background.lineStyle(1, 0xc0cbdc, 1);
+        background.strokeRoundedRect(-26, -9, 52, 18, 4);
+
+        this.promptRing = this.add.graphics();
+
+        const key = this.add.text(-17, 0, 'E', pixelText).setOrigin(0.5);
+
+        const label = this.add.text(-8, 0, 'Hold', {
+            ...pixelText,
+            color: '#c0cbdc',
+        }).setOrigin(0, 0.5);
+
+        this.prompt.add([background, this.promptRing, key, label]);
+    }
+
+    drawPromptRing(progress) {
+        this.promptRing.clear();
+        this.promptRing.lineStyle(2, 0x3a4466, 1);
+        this.promptRing.strokeCircle(-17, 0, 6);
+
+        if (progress > 0) {
+            this.promptRing.lineStyle(2, 0xfee761, 1);
+            this.promptRing.beginPath();
+            this.promptRing.arc(-17, 0, 6, Phaser.Math.DegToRad(-90), Phaser.Math.DegToRad(-90 +  360 * progress), false);
+            this.promptRing.strokePath();
+        }
+    }
+
+    updatePickup(delta) {
+        const target = this.nearestPickupableFungus();
+
+        if (target !== this.holdTarget) {
+            this.holdTarget = target;
+            this.holdTime = 0;
+        }
+
+        if (!target) {
+            this.prompt.setVisible(false);
+            return false;
+        }
+        this.prompt.setVisible(true);
+        this.prompt.setPosition(target.x, target.y - 16);
+
+        const holding = this.keyE.isDown || this.pointerHolding === target;
+        if (holding) {
+            this.holdTime += delta;
+        } else {
+            this.holdTime = 0;
+        }
+
+        const needed = 400 + FUNGI[target.fungusId].rank * 100;
+        const progress = Math.min(this.holdTime / needed, 1);
+        this.drawPromptRing(progress);
+
+        if (progress >= 1) {
+            this.fungusPickup(target);
+            this.holdTarget = null;
+            this.holdTime = 0;
+            this.prompt.setVisible(false);
+        }
+    }
+
 }

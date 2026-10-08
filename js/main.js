@@ -21,4 +21,6 @@ const config = {
     scene: [BootScene, GameScene]
 };
 
-new Phaser.Game(config);
+document.fonts.load('8px "Press Start 2P"').then(() => {
+    new Phaser.Game(config);
+});
