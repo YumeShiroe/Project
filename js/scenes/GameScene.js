@@ -1,6 +1,6 @@
 import { FUNGI } from '../data/fungi.js';
 import { REGIONS } from '../data/region.js';
-import { pixelText } from '../ui/style.js';
+import { pixelText, smallPixelText } from '../ui/style.js';
 
 const noSpawnTile = [4, 5];
 
@@ -32,6 +32,9 @@ export default class GameScene extends Phaser.Scene {
         this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
         this.cameras.main.startFollow(this.player);
 
+        this.hotbar = this.registry.get('hotbar');
+        this.learned = this.registry.get('learned');
+
         this.cursors = this.input.keyboard.createCursorKeys();
         this.keys = this.input.keyboard.addKeys('W,A,S,D');
 
@@ -55,6 +58,13 @@ export default class GameScene extends Phaser.Scene {
             this.scene.pause();
         });
         this.events.on('resume', () => this.input.keyboard.resetKeys());
+
+        const numberKeys = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'];
+        for (let i = 0; i < numberKeys.length; i++) {
+            this.input.keyboard.on('keydown-' + numberKeys[i], () => this.eatFromHotBar(i));
+        }
+
+        this.scene.launch('HotBarScene');
     }
 
     update(time, delta) {
@@ -286,6 +296,50 @@ export default class GameScene extends Phaser.Scene {
             this.holdTime = 0;
             this.prompt.setVisible(false);
         }
+    }
+
+    eatFromHotBar(index) {
+        const id = this.hotbar.slots[index];
+        if (id === null) {
+            return;
+        }
+        if (this.inventory.countOf(id) === 0)
+            return;
+
+        const data = FUNGI[id];
+        const above = this.player.y - 14;
+
+        if (data.usage === 'permanent') {
+            if (this.learned.has(id)) {
+                this.floatingText(this.player.x, above, 'Already eaten');
+                return;
+            }
+            this.learned.add(id);
+        }
+
+        this.inventory.consume(id);
+        this.floatingText(this.player.x, above, 'Ate ' + data.name);
+        this.applyFungusEffect(id);
+    }
+
+    applyFungusEffect(id) {
+        // Nothing for now since ability will be added later
+    }
+
+    floatingText(x, y, text) {
+        const label = this.add.text(x, y, text, {
+            ...pixelText,
+            stroke: '#181425',
+            strokeThickness: 2
+        }).setOrigin(0.5).setDepth(20000);
+
+        this.tweens.add({
+            targets: label,
+            y: y -14,
+            alpha: 0,
+            duration: 900,
+            onComplete: () => label.destroy()
+        });
     }
 
 }

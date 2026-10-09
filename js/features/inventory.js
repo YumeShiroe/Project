@@ -4,12 +4,16 @@ export default class Inventory {
         this. unlockedInventorySlots = unlockedInventorySlots;
         this.stackSize = stackSize;
         this.coins = 0;
-        this.events = new Phaser.events.EventEmitter();
+        this.events = new Phaser.Events.EventEmitter();
 
         this.slots = [];
         for (let i = 0; i < totalInventorySlots; i++) {
             this.slots.push(null);
         }
+    }
+
+    changed() {
+        this.events.emit('changed');
     }
 
     ableToAdd(id) {
@@ -23,11 +27,23 @@ export default class Inventory {
         return false;
     }
 
+    consume(id) {
+        for (let i = this.totalInventorySlots - 1; i >= 0; i--) {
+            const slot = this.slots[i];
+            if (slot !== null && slot.id === id) {
+                this.removeItemFromSlot(i, 1);
+                return true;
+            }
+        }
+        return false;
+    }
+
     addItem(id) {
         for (let i = 0; i < this.unlockedInventorySlots; i++) {
             const slot = this.slots[i];
             if (slot !== null && slot.id === id && slot.count < this.stackSize) {
                 slot.count++;
+                this.changed();
                 return true;
             }
         }
@@ -38,6 +54,7 @@ export default class Inventory {
                     id: id,
                     count: 1
                 };
+                this.changed();
                 return true;
             }
         }
@@ -51,6 +68,7 @@ export default class Inventory {
         slot.count -= amount;
         if (slot.count <= 0)
             this.slots[index] = null;
+        this.changed();
     }
 
     countOf(id) {
@@ -73,7 +91,7 @@ export default class Inventory {
         return used;
     }
 
-    unlockSlot() {
+    unlockSlot(amount) {
         this.unlockedInventorySlots = Math.min(this.totalInventorySlots, this.unlockedInventorySlots + amount);
     }
 }

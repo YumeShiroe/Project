@@ -4,3 +4,10 @@ export const pixelText = {
     color: '#ffffff',
     resolution: 1
 }
+
+export const smallPixelText = {
+    fontFamily: '"Silkscreen',
+    fontSize: '8px',
+    color: '#ffffff',
+    resolution: 1
+};

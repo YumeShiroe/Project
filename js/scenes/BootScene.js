@@ -20,6 +20,8 @@ export default class BootScene extends Phaser.Scene {
         this.load.image('inventory-ui', 'assets/UI/inventory.png');
         this.load.image('lock', 'assets/UI/lock.png');
 
+        this.load.image('hotbar-ui', 'assets/UI/hotbar.png');
+
         this.load.spritesheet('fungi', 'assets/sprites/fungi.png', {
             frameWidth: 16,
             frameHeight: 16

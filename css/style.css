@@ -3,6 +3,11 @@
     src: url('../assets/fonts/PressStart2P-Regular.ttf');
 }
 
+@font-face {
+    font-family: 'Silkscreen';
+    src: url('../assets/fonts/Silkscreen-Regular.ttf');
+}
+
 html, body {
     margin: 0;
     padding: 0;

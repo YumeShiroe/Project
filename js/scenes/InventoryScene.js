@@ -1,4 +1,4 @@
-import { pixelText } from '../ui/style.js'
+import { pixelText, smallPixelText } from '../ui/style.js'
 import { FUNGI } from '../data/fungi.js'
 
 const panel_x = 141;
@@ -7,6 +7,7 @@ const slot_start_x = 23;
 const slot_start_y = 23;
 const slot_distance = 22;
 const columns = 7;
+const numberKeys = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'];
 
 export default class InventoryScene extends Phaser.Scene {
     constructor() {
@@ -28,7 +29,16 @@ export default class InventoryScene extends Phaser.Scene {
         this.createToolTip();
 
         this.input.keyboard.on('keydown-I', () => this.close());
-        this.input.keyboard.on('Keydown-ESC', () => this.close());
+        this.input.keyboard.on('keydown-ESC', () => this.close());
+
+        this.hotbar = this.registry.get('hotbar');
+        this.hoverId = null;
+
+        for (let i = 0; i < numberKeys.length; i++) {
+            this.input.keyboard.on('keydown-' + numberKeys[i], () => {
+                this.assignHovered(i)
+            });
+        }
     }
 
     drawSlots() {
@@ -54,8 +64,14 @@ export default class InventoryScene extends Phaser.Scene {
             }).setOrigin(1, 1));
 
             const zone = this.add.zone(sx, sy, 20, 20).setOrigin(0).setInteractive();
-            zone.on('pointerover', () => this.showToolTip(slot.id, sx, sy));
-            zone.on('pointerout', () => this.hideToolTip());
+            zone.on('pointerover', () => {
+                this.hoverId = slot.id;
+                this.showToolTip(slot.id, sx, sy);
+            });
+            zone.on('pointerout', () => {
+                this.hoverId = null;
+                this.hideToolTip();
+            });
             this.panel.add(zone);
         }
     }
@@ -108,5 +124,13 @@ export default class InventoryScene extends Phaser.Scene {
     close() {
         this.scene.resume('GameScene');
         this.scene.stop();
+    }
+
+    assignHovered(index) {
+        if (this.hoverId === null) 
+            return;
+        if (FUNGI[this.hoverId].usage === null)
+            return;
+        this.hotbar.assignFungus(index, this.hoverId);
     }
 }
