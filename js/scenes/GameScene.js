@@ -1,6 +1,7 @@
 import { FUNGI } from '../data/fungi.js';
 import { REGIONS } from '../data/region.js';
 import { pixelText, smallPixelText } from '../ui/style.js';
+import { MAPS } from '../data/maptravel.js';
 
 const noSpawnTile = [4, 5];
 
@@ -9,28 +10,41 @@ export default class GameScene extends Phaser.Scene {
         super('GameScene');
     }
 
-    create() {
-        this.map = this.make.tilemap({ key: 'hazy-forest' });
-        const tiles = this.map.addTilesetImage('forest', 'forest-tiles');
+    create(data) {
+        const mapID = data.mapID || 'home';
+        const spawnName = data.spawn || 'default';
+        this.mapInfo = MAPS[mapID];
 
+        this.map = this.make.tilemap({
+            key: this.mapInfo.tilemap
+        });
+
+        const tiles = this.map.addTilesetImage(this.mapInfo.tileset, this.mapInfo.tilesetImage);
         this.groundLayer = this.map.createLayer('ground', tiles);
+        if (this.map.getLayer('grass'))
+            this.map.createLayer('grass', tiles);
         this.map.createLayer('decor', tiles);
         this.collisionLayer = this.map.createLayer('collision', tiles);
 
-        this.player = this.physics.add.sprite(this.map.widthInPixels / 2, this.map.heightInPixels / 2, 'player', 0);
+        const start = this.findSpawn(spawnName);
+        this.player = this.physics.add.sprite(start.x, start.y, 'player', 0);
         this.speed = 60;
         this.facing = 'down';
 
         this.aboveLayer = this.map.createLayer('above', tiles);
-
         this.collisionLayer.setCollisionByExclusion([-1]);
         this.physics.add.collider(this.player, this.collisionLayer);
-
         this.physics.world.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
         this.player.setCollideWorldBounds(true);
 
-        this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
-        this.cameras.main.startFollow(this.player);
+        const cam = this.cameras.main;
+        if (this.map.widthInPixels <= cam.width && this.map.heightInPixels <= cam.height) {
+            cam.centerOn(this.map.widthInPixels / 2, this.map.heightInPixels / 2);
+        } else {
+            cam.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
+            cam.startFollow(this.player);
+        }
+        cam.fadeIn(300, 0, 0, 0);
 
         this.hotbar = this.registry.get('hotbar');
         this.learned = this.registry.get('learned');
@@ -51,12 +65,15 @@ export default class GameScene extends Phaser.Scene {
 
         this.aboveLayer.setDepth(10000);
         this.fungiGroup = this.physics.add.staticGroup();
-        this.spawnFungi(REGIONS.hazyForest);
+        if (this.mapInfo.region !== null) {
+            this.spawnFungi(REGIONS[this.mapInfo.region]);
+        }
 
         this.input.keyboard.on('keydown-I', () => {
             this.scene.launch('InventoryScene');
             this.scene.pause();
         });
+        this.events.off('resume');
         this.events.on('resume', () => this.input.keyboard.resetKeys());
 
         const numberKeys = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'];
@@ -64,10 +81,22 @@ export default class GameScene extends Phaser.Scene {
             this.input.keyboard.on('keydown-' + numberKeys[i], () => this.eatFromHotBar(i));
         }
 
-        this.scene.launch('HotBarScene');
+        this.changingMap = false;
+        this.createExits();
+        this.createInteractions();
+        this.events.off('menu-action');
+        this.events.on('menu-action', (action) => this.onMenuAction(action));
+
+        if (!this.scene.isActive('HotBarScene'))
+            this.scene.launch('HotBarScene');
     }
 
     update(time, delta) {
+        if (this.changingMap) {
+            this.player.setVelocity(0, 0);
+            return;
+        }
+
         const left = this.cursors.left.isDown || this.keys.A.isDown;
         const right = this.cursors.right.isDown || this.keys.D.isDown;
         const up = this.cursors.up.isDown || this.keys.W.isDown;
@@ -324,6 +353,64 @@ export default class GameScene extends Phaser.Scene {
 
     applyFungusEffect(id) {
         // Nothing for now since ability will be added later
+    }
+
+    findSpawn(name) {
+        const layer = this.map.getObjectLayer('spawns');
+        if (layer) {
+            for (let i = 0; i < layer.objects.length; i++) {
+                if (layer.objects[i].name === name) {
+                    return {
+                        x: layer.objects[i].x,
+                        y: layer.objects[i].y
+                    };
+                }
+            }
+        }
+        return {
+            x: this.map.widthInPixels / 2,
+            y: this.map.heightInPixels / 2
+        };
+    }
+
+    readProperty(object) {
+        const props = {};
+        if (object.properties) {
+            for (let i = 0; i < object.properties.length; i++) {
+                props[object.properties[i].name] = object.properties[i].value;
+            }
+        }
+        return props
+    }
+
+    createExits() {
+        const layer = this.map.getObjectLayer('exits');
+        if (!layer)
+            return;
+        for (let i = 0; i < layer.objects.length; i++) {
+            const object = layer.objects[i];
+            const props = this.readProperty(object);
+            const zone = this.add.zone(object.x, object.y, object.width, object.height).setOrigin(0);
+            this.physics.add.existing(zone, true);
+            this.physics.add.overlap(this.player, zone, () => this.changeMap(props.target, props.spawn));
+        }
+    }
+
+    changeMap(target, spawn) {
+        if (this.changingMap || !MAPS[target])
+            return;
+        this.changingMap = true;
+        this.cameras.main.fadeOut(300, 0, 0, 0);
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+            this.scene.restart({ 
+                mapID: target,
+                spawn: spawn
+            });
+        });
+    }
+
+    createInteractions() {
+        
     }
 
     floatingText(x, y, text) {

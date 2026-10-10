@@ -23,6 +23,6 @@ const config = {
     scene: [BootScene, GameScene, InventoryScene, HotBarScene]
 };
 
-document.fonts.load('8px "Press Start 2P", "Silkscreen').then(() => {
+document.fonts.load('8px "Press Start 2P", "Silkscreen"').then(() => {
     new Phaser.Game(config);
 });

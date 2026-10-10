@@ -6,7 +6,7 @@ export const pixelText = {
 }
 
 export const smallPixelText = {
-    fontFamily: '"Silkscreen',
+    fontFamily: '"Silkscreen"',
     fontSize: '8px',
     color: '#ffffff',
     resolution: 1

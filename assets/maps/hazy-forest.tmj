@@ -182,6 +182,29 @@
                  "width":16,
                  "x":0,
                  "y":306
+                }, 
+                {
+                 "height":48,
+                 "id":4,
+                 "name":"",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"spawn",
+                         "type":"string",
+                         "value":"fromForest"
+                        }, 
+                        {
+                         "name":"target",
+                         "type":"string",
+                         "value":"fortress"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":16,
+                 "x":944,
+                 "y":352
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -219,6 +242,19 @@
                  "width":0,
                  "x":636.012032660077,
                  "y":281.478298238075
+                }, 
+                {
+                 "height":0,
+                 "id":5,
+                 "name":"fromFortress",
+                 "opacity":1,
+                 "point":true,
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":920,
+                 "y":367
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -278,7 +314,7 @@
          "y":0
         }],
  "nextlayerid":7,
- "nextobjectid":4,
+ "nextobjectid":6,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.2",
