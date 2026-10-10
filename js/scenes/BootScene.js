@@ -40,6 +40,9 @@ export default class BootScene extends Phaser.Scene {
 
         this.load.image('bounty-board', 'assets/UI/bounty_board.png');
 
+        this.load.image('shop-tiles', 'assets/tilesets/shop.png');
+        this.load.tilemapTiledJSON('shop', 'assets/maps/shop.tmj');
+
         this.load.spritesheet('fungi', 'assets/sprites/fungi.png', {
             frameWidth: 16,
             frameHeight: 16

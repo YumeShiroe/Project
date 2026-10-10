@@ -28,5 +28,11 @@ export const MAPS = {
         tileset: 'guild',
         tilesetImage: 'guild-tiles',
         region: null
+    },
+    shop: {
+        tilemap: 'shop',
+        tileset: 'shop',
+        tilesetImage: 'shop-tiles',
+        region: null
     }
 };

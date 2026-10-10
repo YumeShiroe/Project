@@ -521,7 +521,7 @@ export default class GameScene extends Phaser.Scene {
                 },
                 {
                     label: 'Shop',
-                    action: 'shop',
+                    action: 'enterShop',
                 },
                 {
                     label: 'Leave',
@@ -561,6 +561,8 @@ export default class GameScene extends Phaser.Scene {
             this.interactPrompt.setVisible(false);
             this.scene.launch('BountyScene');
             this.scene.pause();
+        } else if (action === 'shopkeeper') {
+            this.openShop();
         }
 
     }
@@ -581,8 +583,12 @@ export default class GameScene extends Phaser.Scene {
             this.payMom()
         } else if (action === 'sleep') {
             this.sleep(false);
-        } else if (action === 'shop')
-            this.floatingText(this.player.x, this.player.y - 16, 'Coming Soon');
+        } else if (action === 'enterShop') {
+            this.changeMap('shop', 'fromCastle');
+        } else if (action === 'buyInventory') {
+            this.buyInventory();
+        }
+            
     }
 
     updateNight() {
@@ -629,6 +635,38 @@ export default class GameScene extends Phaser.Scene {
                 message: message
             });
         })
+    }
+
+    inventoryPrice() {
+        return 100 * (this.state.inventoryLevel + 1);
+    }
+
+    openShop() {
+        const options = [];
+        if (this.inventory.unlockedInventorySlots < this.inventory.totalInventorySlots) {
+            options.push({
+                label: 'Inventory ' + this.inventoryPrice() + 'G',
+                action: 'buyInventory'
+            });
+        }
+        options.push({
+            label: 'Leave',
+            action: 'leave'
+        });
+        this.openMenu('shop', options);
+    }
+
+    buyInventory() {
+        const price = this.inventoryPrice();
+        if (this.inventory.coins < price) {
+            this.floatingText(this.player.x, this.player.y - 16, 'Not Enough Gold');
+            return;
+        }
+        this.inventory.coins -= price;
+        this.inventory.unlockSlot(2);
+        this.inventory.changed();
+        this.state.inventoryLevel++;
+        this.floatingText(this.player.x, this.player.y - 16, '+2 Slots');
     }
 
     floatingText(x, y, text) {
