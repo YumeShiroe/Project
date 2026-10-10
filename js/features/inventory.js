@@ -27,15 +27,20 @@ export default class Inventory {
         return false;
     }
 
-    consume(id) {
-        for (let i = this.totalInventorySlots - 1; i >= 0; i--) {
+    consume(id, amount = 1) {
+        if (this.countOf(id) < amount)
+            return false;
+
+        let remain = amount;
+        for (let i = this.totalInventorySlots - 1; i >= 0 && remain > 0; i--) {
             const slot = this.slots[i];
             if (slot !== null && slot.id === id) {
-                this.removeItemFromSlot(i, 1);
-                return true;
+                const take = Math.min(remain, slot.count);
+                this.removeItemFromSlot(i, take);
+                remain -= take;
             }
         }
-        return false;
+        return true;
     }
 
     addItem(id) {

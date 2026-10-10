@@ -12,8 +12,10 @@ export default class GameScene extends Phaser.Scene {
 
     create(data) {
         const mapID = data.mapID || 'home';
+        this.mapID = mapID;
         const spawnName = data.spawn || 'default';
         this.mapInfo = MAPS[mapID];
+        this.state = this.registry.get('state');
 
         this.map = this.make.tilemap({
             key: this.mapInfo.tilemap
@@ -66,7 +68,7 @@ export default class GameScene extends Phaser.Scene {
         this.aboveLayer.setDepth(10000);
         this.fungiGroup = this.physics.add.staticGroup();
         if (this.mapInfo.region !== null) {
-            this.spawnFungi(REGIONS[this.mapInfo.region]);
+            this.setupFungi();
         }
 
         this.input.keyboard.on('keydown-I', () => {
@@ -81,7 +83,6 @@ export default class GameScene extends Phaser.Scene {
             this.input.keyboard.on('keydown-' + numberKeys[i], () => this.eatFromHotBar(i));
         }
 
-        this.state = this.registry.get('state');
         this.nightOverlay = this.add.rectangle(0, 0, 480, 270, 0x0b0d2b).setOrigin(0).setScrollFactor(0).setDepth(15000).setAlpha(0);
         this.updateNight();
 
@@ -173,6 +174,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     spawnFungi(region) {
+        const list = [];
         const used = new Set();
         let placed = 0;
         let tries = 0;
@@ -200,8 +202,30 @@ export default class GameScene extends Phaser.Scene {
                 continue;
 
             used.add(key);
-            this.createFungus(this.pickWeighted(region.spawnTable), x, y);
+            list.push({
+                id: this.pickWeighted(region.spawnTable), 
+                x: x,
+                y: y
+            });
             placed++;
+        }
+        return list;
+    }
+
+    setupFungi() {
+        let saved = this.state.fungiByMap[this.mapID];
+        if (!saved || saved.day !== this.state.day) {
+            saved = {
+                day: this.state.day,
+                list: this.spawnFungi(REGIONS[this.mapInfo.region])
+            };
+            this.state.fungiByMap[this.mapID] = saved;
+        }
+        
+        for (let i = 0; i < saved.list.length; i++) {
+            const record = saved.list[i];
+            const fungus = this.createFungus(record.id, record.x, record.y);
+            fungus.record = record;
         }
     }
 
@@ -268,6 +292,11 @@ export default class GameScene extends Phaser.Scene {
             onComplete: () => label.destroy()
         });
 
+        const list = this.state.fungiByMap[this.mapID].list;
+        const index = list.indexOf(fungus.record);
+        if (index !== -1) {
+            list.splice(index, 1);
+        }
         fungus.destroy();
     }
 
