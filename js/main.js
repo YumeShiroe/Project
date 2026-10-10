@@ -4,6 +4,7 @@ import InventoryScene from './scenes/InventoryScene.js';
 import HotBarScene from './scenes/HotBarScene.js';
 import MenuScene from './scenes/MenuScene.js';
 import GameOverScene from './scenes/GameOverScene.js';
+import BountyScene from './scenes/BountyScene.js';
 
 const config = {
     type: Phaser.AUTO,
@@ -22,7 +23,7 @@ const config = {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
     },
-    scene: [BootScene, GameScene, InventoryScene, HotBarScene, MenuScene, GameOverScene]
+    scene: [BootScene, GameScene, InventoryScene, HotBarScene, MenuScene, GameOverScene, BountyScene]
 };
 
 document.fonts.load('8px "Press Start 2P", "Silkscreen"').then(() => {

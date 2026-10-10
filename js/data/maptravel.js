@@ -22,5 +22,11 @@ export const MAPS = {
         tileset: 'fortress',
         tilesetImage: 'fortress-tiles',
         region: null
+    },
+    guildHall: {
+        tilemap: 'guild-hall',
+        tileset: 'guild',
+        tilesetImage: 'guild-tiles',
+        region: null
     }
 };

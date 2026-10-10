@@ -35,6 +35,11 @@ export default class BootScene extends Phaser.Scene {
 
         this.load.tilemapTiledJSON('crossroads', 'assets/maps/crossroads.tmj');
 
+        this.load.image('guild-tiles', 'assets/tilesets/guild.png');
+        this.load.tilemapTiledJSON('guild-hall', 'assets/maps/guild-hall.tmj');
+
+        this.load.image('bounty-board', 'assets/UI/bounty_board.png');
+
         this.load.spritesheet('fungi', 'assets/sprites/fungi.png', {
             frameWidth: 16,
             frameHeight: 16

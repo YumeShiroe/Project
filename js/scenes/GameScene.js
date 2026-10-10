@@ -39,6 +39,12 @@ export default class GameScene extends Phaser.Scene {
         this.physics.world.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
         this.player.setCollideWorldBounds(true);
 
+        if (this.map.getLayer('blocked')) {
+            const blocked = this.map.createLayer('blocked', tiles).setVisible(false);
+            blocked.setCollisionByExclusion([-1]);
+            this.physics.add.collider(this.player, blocked);
+        }
+
         const cam = this.cameras.main;
         if (this.map.widthInPixels <= cam.width && this.map.heightInPixels <= cam.height) {
             cam.centerOn(this.map.widthInPixels / 2, this.map.heightInPixels / 2);
@@ -551,7 +557,12 @@ export default class GameScene extends Phaser.Scene {
                     action: 'leave'
                 }
             ]);
+        } else if (action === 'bounties') {
+            this.interactPrompt.setVisible(false);
+            this.scene.launch('BountyScene');
+            this.scene.pause();
         }
+
     }
 
     openMenu(title, option) {
@@ -564,13 +575,14 @@ export default class GameScene extends Phaser.Scene {
     }
 
     onMenuAction(action) {
-        if (action === 'guild' || action === 'shop') {
-            this.floatingText(this.player.x, this.player.y - 16, 'Coming Soon');
+        if (action === 'guild') {
+            this.changeMap('guildHall', 'fromCastle');
         } else if (action === 'payMom') {
             this.payMom()
         } else if (action === 'sleep') {
             this.sleep(false);
-        }
+        } else if (action === 'shop')
+            this.floatingText(this.player.x, this.player.y - 16, 'Coming Soon');
     }
 
     updateNight() {
