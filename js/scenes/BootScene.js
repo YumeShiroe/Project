@@ -28,6 +28,12 @@ export default class BootScene extends Phaser.Scene {
 
         this.load.image('hotbar-ui', 'assets/UI/hotbar.png');
 
+        this.load.image('ui-panel', 'assets/UI/panel.png');
+        this.load.image('ui-button', 'assets/UI/button.png');
+        this.load.image('ui-button-active', 'assets/UI/button_active.png');
+
+        this.load.tilemapTiledJSON('crossroads', 'assets/maps/crossroads.tmj');
+
         this.load.spritesheet('fungi', 'assets/sprites/fungi.png', {
             frameWidth: 16,
             frameHeight: 16

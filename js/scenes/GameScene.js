@@ -132,6 +132,7 @@ export default class GameScene extends Phaser.Scene {
             this.player.setFrame(idleFrames[this.facing]);
         }
         this.updatePickup(delta);
+        this.updateInteract();
     }
 
     pickWeighted(table) {
@@ -410,7 +411,83 @@ export default class GameScene extends Phaser.Scene {
     }
 
     createInteractions() {
-        
+        this.interactions = [];
+        const layer = this.map.getObjectLayer('interact');
+        if (layer) {
+            for (let i = 0; i < layer.objects.length; i++) {
+                const object = layer.objects[i];
+                const props = this.readProperty(object);
+                this.interactions.push({
+                    rect: new Phaser.Geom.Rectangle(object.x, object.y, object.width, object.height),
+                    action: props.action,
+                    label: props.label || 'Enter'
+                });
+            }
+        }
+
+        this.interactPrompt = this.add.text(0, 0, '', {
+            ...pixelText,
+            stroke: '#181425',
+            strokeThickness: 2
+        }).setOrigin(0.5).setDepth(20000).setVisible(false);    
+    }
+
+    updateInteract() {
+        let curr = null;
+        for (let i = 0; i < this.interactions.length; i++) {
+            if (Phaser.Geom.Rectangle.Contains(this.interactions[i].rect, this.player.x, this.player.y)) {
+                curr = this.interactions[i];
+            }
+        }
+
+        if (curr === null) {
+            this.interactPrompt.setVisible(false);
+            return;
+        }
+
+        this.interactPrompt.setText('E ' + curr.label);
+        this.interactPrompt.setPosition(this.player.x, this.player.y - 16);
+        this.interactPrompt.setVisible(true);
+
+        if (Phaser.Input.Keyboard.JustDown(this.keyE)) {
+            this.doAction(curr.action);
+        }
+    }
+
+    doAction(action) {
+        if (action === 'castleMenu') {
+            this.openMenu('Fortress', [
+                {
+                    label: 'Guild',
+                    action: 'guild'
+                },
+                {
+                    label: 'Shop',
+                    action: 'shop',
+                },
+                {
+                    label: 'Leave',
+                    action: 'leave'
+                }
+            ]);
+        } else if (action === 'roadClosed') {
+            this.floatingText(this.player.x, this.player.y - 16, 'The road is being maintained');
+        }
+    }
+
+    openMenu(title, option) {
+        this.interactPrompt.setVisible(false);
+        this.scene.launch('MenuScene', {
+            title: title,
+            options: option
+        });
+        this.scene.pause();
+    }
+
+    onMenuAction(action) {
+        if (action === 'guild' || action === 'shop') {
+            this.floatingText(this.player.x, this.player.y - 16, 'Coming Soon');
+        }
     }
 
     floatingText(x, y, text) {

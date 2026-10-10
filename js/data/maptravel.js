@@ -16,5 +16,11 @@ export const MAPS = {
         tileset: 'fortress',
         tilesetImage: 'fortress-tiles',
         region: null 
+    },
+    crossroads: {
+        tilemap: 'crossroads',
+        tileset: 'fortress',
+        tilesetImage: 'fortress-tiles',
+        region: null
     }
 };
