@@ -43,6 +43,18 @@ export default class BootScene extends Phaser.Scene {
         this.load.image('shop-tiles', 'assets/tilesets/shop.png');
         this.load.tilemapTiledJSON('shop', 'assets/maps/shop.tmj');
 
+        this.load.image('status-ui', 'assets/UI/statusbar.png');
+        this.load.image('hp-fill', 'assets/UI/hp_fill.png');
+        this.load.image('mp-fill', 'assets/UI/mp_fill.png');
+        this.load.image('skillbar-ui', 'assets/UI/skillbar.png');
+
+        this.load.spritesheet('rock-monster', 'assets/sprites/rock_monster.png', {
+            frameWidth: 24,
+            frameHeight: 24
+        });
+        this.load.image('rock', 'assets/sprites/rock.png');
+        this.load.image('rock-shadow', 'assets/sprites/rock_shadow.png');
+
         this.load.spritesheet('fungi', 'assets/sprites/fungi.png', {
             frameWidth: 16,
             frameHeight: 16
@@ -69,6 +81,32 @@ export default class BootScene extends Phaser.Scene {
             frames: this.anims.generateFrameNumbers('player', { frames: [7, 6] }),
             frameRate: 6,
             repeat: -1
+        });
+
+        this.anims.create ({
+            key: 'rock-idle',
+            frames: this.anims.generateFrameNumbers('rock-monster', { frames: [0, 1, 0, 2] }),
+            frameRate: 3,
+            repeat: -1
+        });
+
+        this.anims.create ({
+            key: 'rock-hop',
+            frames: this.anims.generateFrameNumbers('rock-monster', { frames: [3, 4, 0] }),
+            frameRate: 8,
+            repeat: -1
+        });
+
+        this.anims.create ({
+            key: 'rock-throw',
+            frames: this.anims.generateFrameNumbers('rock-monster', { frames: [5, 5, 6] }),
+            frameRate: 6
+        });
+
+        this.anims.create ({
+            key: 'rock-death',
+            frames: this.anims.generateFrameNumbers('rock-monster', { frames: [7, 8, 9, 10] }),
+            frameRate: 6
         });
 
         const inventory = new Inventory();

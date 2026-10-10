@@ -6,6 +6,17 @@ const hotbar_y = 232;
 const hotbar_slot_x = 9;
 const hotbar_slot_y = 8;
 const hotbar_distance = 22;
+const status_x = 366;
+const status_y = 4;
+const bar_x = 22;
+const hp_y = 10;
+const mp_y = 20;
+const bar_width = 77;
+const skill_x = 442;
+const skill_y = 186;
+const skill_slot_x = 8;
+const skill_slot_y = 9;
+const SKILL_KEYS = ['J', 'K', 'L'];
 
 export default class HotBarScene extends Phaser.Scene {
     constructor() {
@@ -34,6 +45,32 @@ export default class HotBarScene extends Phaser.Scene {
             ...smallPixelText,
             color: '#3e2731',
         }).setOrigin(0, 0.5);
+
+        this.add.image(status_x, status_y, 'status-ui').setOrigin(0);
+        this.hpFill = this.add.image(status_x + bar_x, status_y + hp_y, 'hp-fill').setOrigin(0);
+        this.mpFill = this.add.image(status_x + bar_x, status_y + mp_y, 'mp-fill').setOrigin(0);
+
+        this.add.image(skill_x, skill_y, 'skillbar-ui').setOrigin(0);
+        for (let i = 0; i < SKILL_KEYS.length; i++) {
+            const sx = skill_x + skill_slot_x;
+            const sy = skill_y + skill_slot_y + i * hotbar_distance;
+
+            this.add.text(sx + 2, sy + 10, SKILL_KEYS[i], {
+                ...smallPixelText,
+                stroke: '#181425',
+                strokeThickness: 2
+            });
+
+            const zone = this.add.zone(sx, sy, 20, 20).setOrigin(0).setInteractive();
+            zone.on('pointerdown', () => this.useSkill(i));
+        }
+        this.skillKeys = this.input.keyboard.addKeys('J,K,L');
+    }
+
+    useSkill(index) {
+        if (this.scene.isPaused('GameScene'))
+            return;
+        this.scene.get('GameScene').events.emit('use-skill', index);
     }
 
     drawHotBar() {
@@ -59,7 +96,23 @@ export default class HotBarScene extends Phaser.Scene {
         }
     }
 
-    update() {
+    update(time, delta) {
         this.hudText.setText('Day ' + this.state.day + ' ' + this.state.clockText());
+
+        if (!this.scene.isPaused('GameScene')) {
+            this.state.regenMP(delta);
+        }
+
+        const hpRatio = this.state.hp / this.state.maxHP;
+        const mpRatio = this.state.mp / this.state.maxMP;
+        this.hpFill.setCrop(0, 0, Math.floor(bar_width * hpRatio), 5);
+        this.mpFill.setCrop(0, 0, Math.floor(bar_width * mpRatio), 5);
+
+        if (Phaser.Input.Keyboard.JustDown(this.skillKeys.J))
+            this.useSkill(0);
+        if (Phaser.Input.Keyboard.JustDown(this.skillKeys.K))
+            this.useSkill(1);
+        if (Phaser.Input.Keyboard.JustDown(this.skillKeys.L))
+            this.useSkill(2);
     }
 }

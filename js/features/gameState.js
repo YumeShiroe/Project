@@ -17,6 +17,12 @@ export default class GameState {
         this.fungiByMap = {};
         this.inventoryLevel = 0;
         this.generateBounties();
+
+        this.maxHP = 100;
+        this.maxMP = 50;
+        this.hp = this.maxHP;
+        this.mp = this.maxMP;
+        this.mpRegen = 2;
     }
 
     todayCost() {
@@ -38,6 +44,8 @@ export default class GameState {
             return false;
         this.day++;
         this.time = 0;
+        this.hp = this.maxHP;
+        this.mp = this.maxMP;
         this.paidToday = false;
         this.generateBounties();
         return true;
@@ -89,7 +97,7 @@ export default class GameState {
         if (bounty.done) {
             return false;
         }
-        
+
         if (!inventory.consume(bounty.id, bounty.count))
             return false;
 
@@ -97,5 +105,16 @@ export default class GameState {
         inventory.changed();
         bounty.done = true;
         return true;
+    }
+
+    spendMP(cost) {
+        if (this.mp < cost)
+            return false;
+        this.mp -= cost;
+        return true;
+    }
+
+    regenMP(delta) {
+        this.mp = Math.min(this.maxMP, this.mp + this.mpRegen * delta / 1000);
     }
 }

@@ -33,6 +33,9 @@ export default class GameScene extends Phaser.Scene {
         this.speed = 60;
         this.facing = 'down';
 
+        this.invincibleUntil = 0;
+        this.knockbackUntil = 0;
+
         this.aboveLayer = this.map.createLayer('above', tiles);
         this.collisionLayer.setCollisionByExclusion([-1]);
         this.physics.add.collider(this.player, this.collisionLayer);
@@ -99,6 +102,9 @@ export default class GameScene extends Phaser.Scene {
             this.inventory.coins += 100;
             this.inventory.changed();
         });
+        this.input.keyboard.on('keydown-H', () => {
+            this.takeDamage(10, this.player.x + 10, this.player.y);
+        });
 
         this.changingMap = false;
         this.createExits();
@@ -119,6 +125,8 @@ export default class GameScene extends Phaser.Scene {
             this.player.setVelocity(0, 0);
             return;
         }
+        if (this.time.now < this.knockbackUntil)
+            return;
         if (this.state.time < 1) {
             this.state.time = Math.min(1, this.state.time + delta / this.state.dayLength);
         } else if (!this.lateWarned) {
@@ -667,6 +675,40 @@ export default class GameScene extends Phaser.Scene {
         this.inventory.changed();
         this.state.inventoryLevel++;
         this.floatingText(this.player.x, this.player.y - 16, '+2 Slots');
+    }
+
+    takeDamage(amount, fromX, fromY) {
+        if (this.changingMap)
+            return;
+        if (this.time.now < this.invincibleUntil)
+            return;
+        this.state.hp = Math.max(0, this.state.hp - amount);
+        this.invincibleUntil = this.time.now + 1000;
+        this.knockbackUntil = this.time.now + 150;
+
+        const angle = Phaser.Math.Angle.Between(fromX, fromY, this.player.x, this.player.y);
+        this.player.setVelocity(Math.cos(angle) * 160, Math.sin(angle) * 160);
+        this.cameras.main.shake(100, 0.005);
+        this.player.setTint(0xff0044);
+        this.time.delayedCall(100, () => this.player.clearTint());
+
+        this.tweens.add({
+            targets: this.player,
+            alpha: 0.3,
+            duration: 100,
+            yoyo: true,
+            repeat: 4,
+            onComplete: () => this.player.setAlpha(1)
+        });
+
+        if (this.state.hp <= 0) {
+            this.faint();
+        }
+    }
+
+    faint() {
+        this.floatingText(this.player.x, this.player.y - 16, 'You fainted...');
+        this.state.hp = this.state.maxHP;
     }
 
     floatingText(x, y, text) {
