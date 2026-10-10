@@ -81,6 +81,18 @@ export default class GameScene extends Phaser.Scene {
             this.input.keyboard.on('keydown-' + numberKeys[i], () => this.eatFromHotBar(i));
         }
 
+        this.state = this.registry.get('state');
+        this.nightOverlay = this.add.rectangle(0, 0, 480, 270, 0x0b0d2b).setOrigin(0).setScrollFactor(0).setDepth(15000).setAlpha(0);
+        this.updateNight();
+
+        this.input.keyboard.on('keydown-N', () => {
+            this.state.time = 0.9;
+        });
+        this.input.keyboard.on('keydown-M', () => {
+            this.inventory.coins += 100;
+            this.inventory.changed();
+        });
+
         this.changingMap = false;
         this.createExits();
         this.createInteractions();
@@ -89,6 +101,10 @@ export default class GameScene extends Phaser.Scene {
 
         if (!this.scene.isActive('HotBarScene'))
             this.scene.launch('HotBarScene');
+
+        if (data.message) {
+            this.time.delayedCall(400, () => this.floatingText(this.player.x, this.player.y - 16, data.message));
+        }
     }
 
     update(time, delta) {
@@ -96,6 +112,13 @@ export default class GameScene extends Phaser.Scene {
             this.player.setVelocity(0, 0);
             return;
         }
+        if (this.state.time < 1) {
+            this.state.time = Math.min(1, this.state.time + delta / this.state.dayLength);
+        } else if (!this.lateWarned) {
+            this.lateWarned = true;
+            this.floatingText(this.player.x, this.player.y, "It's late...I need to sleep");
+        }
+        this.updateNight();
 
         const left = this.cursors.left.isDown || this.keys.A.isDown;
         const right = this.cursors.right.isDown || this.keys.D.isDown;
@@ -472,6 +495,33 @@ export default class GameScene extends Phaser.Scene {
             ]);
         } else if (action === 'roadClosed') {
             this.floatingText(this.player.x, this.player.y - 16, 'The road is being maintained');
+        } else if (action === 'mom') {
+            const due = this.state.amountDue();
+            if (due === 0) {
+                this.floatingText(this.player.x, this.player.y - 16, 'You could still sense her heartbeat' );
+                return;
+            }
+            this.openMenu('Due: ' + due, [
+                {
+                    label: 'Pay ' + due, 
+                    action: 'payMom'
+                },
+                {
+                    label: 'Leave',
+                    action: 'leave'
+                }
+            ]);
+        } else if (action === 'sleep') {
+            this.openMenu('dream is calling', [
+                {
+                    label: 'Sleep',
+                    action: 'sleep'
+                },
+                {
+                    label: 'Nuh uh',
+                    action: 'leave'
+                }
+            ]);
         }
     }
 
@@ -487,7 +537,57 @@ export default class GameScene extends Phaser.Scene {
     onMenuAction(action) {
         if (action === 'guild' || action === 'shop') {
             this.floatingText(this.player.x, this.player.y - 16, 'Coming Soon');
+        } else if (action === 'payMom') {
+            this.payMom()
+        } else if (action === 'sleep') {
+            this.sleep(false);
         }
+    }
+
+    updateNight() {
+        let darkness = 0;
+        if (this.state.time > 0.6) {
+            darkness = (this.state.time - 0.6) / 0.4 * 0.6;
+        }
+        this.nightOverlay.setAlpha(darkness);
+    }
+
+    payMom() {
+        const due = this.state.amountDue();
+        if (this.inventory.coins < due) {
+            this.floatingText(this.player.x, this.player.y - 16, "Bro you don't have enough :sob:");
+            return;
+        }
+        this.inventory.coins -= due;
+        this.inventory.changed();
+        this.state.costOverdue = 0;
+        this.state.overdueDays = 0;
+        this.state.paidToday = true;
+        this.floatingText(this.player.x, this.player.y - 16, 'Paid ' + due);
+    }
+
+    sleep(passedOut) {
+        if (this.changingMap)
+            return;
+        this.changingMap = true;
+        const stillAlive = this.state.nextDay();
+
+        this.cameras.main.fadeOut(600, 0, 0, 0);
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+            if (!stillAlive) {
+                this.scene.stop('HotBarScene');
+                this.scene.start('GameOverScene');
+                return;
+            }
+            let message = "Wakey! Waky! It's day " + this.state.day;
+            if (passedOut) 
+                message = 'You was embraced by dreams...';
+            this.scene.restart({
+                mapID: 'home',
+                spawn: 'bed',
+                message: message
+            });
+        })
     }
 
     floatingText(x, y, text) {

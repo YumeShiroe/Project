@@ -2,6 +2,7 @@
 
 import Inventory from '../features/inventory.js';
 import Hotbar from '../features/hotbar.js';
+import GameState from '../features/gameState.js';
 
 export default class BootScene extends Phaser.Scene {
     constructor() {
@@ -67,6 +68,9 @@ export default class BootScene extends Phaser.Scene {
         this.registry.set('inventory', inventory);
         this.registry.set('hotbar', new Hotbar(inventory));
         this.registry.set('learned', new Set());
+        this.registry.set('state', new GameState());
+        
+        inventory.coins = 50;
         
         this.scene.start('GameScene');
     }

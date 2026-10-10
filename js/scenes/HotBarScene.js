@@ -27,6 +27,13 @@ export default class HotBarScene extends Phaser.Scene {
             this.hotbar.events.off('changed', onChange);
             this.inventory.events.off('changed', onChange);
         });
+
+        this.state = this.registry.get('state');
+        this.add.nineslice(4, 4, 'ui-panel', 0, 120, 24, 12, 12, 12, 12).setOrigin(0);
+        this.hudText = this.add.text(14, 16, '', {
+            ...smallPixelText,
+            color: '#3e2731',
+        }).setOrigin(0, 0.5);
     }
 
     drawHotBar() {
@@ -50,5 +57,9 @@ export default class HotBarScene extends Phaser.Scene {
                 strokeThickness: 2
             }));
         }
+    }
+
+    update() {
+        this.hudText.setText('Day ' + this.state.day + ' ' + this.state.clockText());
     }
 }
