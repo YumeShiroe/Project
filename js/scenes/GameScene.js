@@ -662,6 +662,8 @@ export default class GameScene extends Phaser.Scene {
             this.scene.pause();
         } else if (action === 'shopkeeper') {
             this.openShop();
+        } else if (action === 'stoneDoor') {
+            this.offeringAtDoor();
         }
 
     }
