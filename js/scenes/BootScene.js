@@ -53,6 +53,10 @@ export default class BootScene extends Phaser.Scene {
 
         this.load.spritesheet('lightning', 'assets/sprites/lightning.png', { frameWidth: 80, frameHeight: 16 });
 
+        this.load.tilemapTiledJSON('venerable-peak', 'assets/maps/venerable-peak.tmj');
+
+        this.load.spritesheet('fortress-sheet', 'assets/tilesets/fortress.png', { frameWidth: 16, frameHeight: 16 });
+
         this.load.spritesheet('rock-monster', 'assets/sprites/rock_monster.png', {
             frameWidth: 24,
             frameHeight: 24

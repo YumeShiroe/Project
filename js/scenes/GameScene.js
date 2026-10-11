@@ -4,7 +4,8 @@ import { pixelText, smallPixelText } from '../ui/style.js';
 import { MAPS } from '../data/maptravel.js';
 import RockMonster from '../features/rockMonster.js';
 
-const noSpawnTile = [4, 5];
+const FUNGI_OFFERING = ['diamond', 'ruby'];
+const OFFERING_GOLD = 1000;
 
 export default class GameScene extends Phaser.Scene {
     constructor() {
@@ -55,6 +56,25 @@ export default class GameScene extends Phaser.Scene {
             if (!monster.dead)
                 this.takeDamage(10, monster.x, monster.y);
         });
+
+        const enemyLayer = this.map.getObjectLayer('enemies');
+        if (enemyLayer) {
+            for (let i = 0; i < enemyLayer.objects.length; i++) {
+                const point = enemyLayer.objects[i];
+                this.monsters.add(new RockMonster(this, point.x, point.y));
+            }
+        }
+
+        this.dangerZones = [];
+        const dangerLayer = this.map.getObjectLayer('dangers');
+        if (dangerLayer) {
+            for (let i = 0; i < dangerLayer.objects.length; i++) {
+                const lo = dangerLayer.objects[i];
+                this.dangerZones.push(new Phaser.Geom.Rectangle(lo.x, lo.y, lo.width, lo.height));
+            }
+        }
+        this.fallingRocks = [];
+        this.nextRockAt = 0;
 
         const cam = this.cameras.main;
         if (this.map.widthInPixels <= cam.width && this.map.heightInPixels <= cam.height) {
@@ -220,6 +240,7 @@ export default class GameScene extends Phaser.Scene {
             monster.spot(this.player);
             monster.setDepth(monster.y);
         })
+        this.updateFallingRock();
     }
 
     pickWeighted(table) {
@@ -256,7 +277,7 @@ export default class GameScene extends Phaser.Scene {
                 continue;
 
             const groundTile = this.groundLayer.getTileAt(tx, ty);
-            if (groundTile && noSpawnTile.includes(groundTile.index))
+            if (groundTile && region.noSpawn.includes(groundTile.index))
                 continue;
 
             const x = tx * 16 + 8;
@@ -990,6 +1011,101 @@ export default class GameScene extends Phaser.Scene {
             }
         });
         return best;
+    }
+
+    updateFallingRock() {
+        if (this.time.now >= this.nextRockAt) {
+            for (let i = 0; i < this.dangerZones.length; i++) {
+                if (Phaser.Geom.Rectangle.Contains(this.dangerZones[i], this.player.x, this.player.y)) {
+                    this.dropRock();
+                    this.nextRockAt = this.time.now + Phaser.Math.Between(1000, 2000);
+                    break;
+                }
+            }
+        }
+
+        for (let i = this.fallingRocks.length - 1; i >= 0; i--) {
+            const fall = this.fallingRocks[i];
+            const progress = Phaser.Math.Clamp(1 - (fall.targetY - fall.rock.y) / 140, 0, 1);
+            fall.shadow.setScale(0.5 + progress);
+            fall.shadow.setAlpha(0.4 + progress * 0.6);
+
+            if (fall.rock.y >= fall.targetY) {
+                this.landRock(fall);
+                this.fallingRocks.splice(i , 1);
+            }
+        }
+    }
+
+    dropRock() {
+        const targetX = this.player.x + Phaser.Math.Between(-40, 40);
+        const targetY = this.player.y + Phaser.Math.Between(-30, 30);
+        const shadow = this.add.image(targetX, targetY, 'rock-shadow').setDepth(1).setScale(0.5);
+        const rock = this.physics.add.image(targetX, targetY - 140, 'fortress-sheet', 31);
+        rock.setDepth(9000);
+        rock.body.setAllowGravity(true);
+        rock.body.setGravityY(500);
+        rock.setAngularVelocity(Phaser.Math.Between(-200, 200));
+        this.fallingRocks.push({
+            rock: rock,
+            shadow: shadow,
+            targetX: targetX,
+            targetY: targetY
+        });
+    }
+
+    landRock(fall) {
+        fall.shadow.destroy();
+        fall.rock.body.stop();
+        fall.rock.body.setAllowGravity(false);
+        this.cameras.main.shake(70, 0.004);
+        const distance = Phaser.Math.Distance.Between(fall.targetX, fall.targetY, this.player.x, this.player.y);
+        if (distance < 12) {
+            this.takeDamage(20, fall.targetX, fall.targetY);
+        }
+        
+        this.tweens.add({
+            targets: fall.rock,
+            scale: 1.6,
+            alpha: 0,
+            duration: 200,
+            onComplete: () => fall.rock.destroy()
+        });
+    }
+
+    offeringAtDoor() {
+        const missing = [];
+        for (let i = 0; i < FUNGI_OFFERING.length; i++) {
+            if (this.inventory.countOf(FUNGI_OFFERING[i]) < 1) {
+                missing.push(FUNGI[FUNGI_OFFERING[i]].name);
+            }
+        }
+
+        if (this.inventory.coins < OFFERING_GOLD) {
+            missing.push(OFFERING_GOLD + 'G');
+        }
+        if (missing.length > 0) {
+            this.floatingText(this.player.x, this.player.y - 16, 'The door is craving for: ' + missing.join(', '));
+            return;
+        }
+
+        for (let i = 0; i < FUNGI_OFFERING.length; i++) {
+            this.inventory.consume(FUNGI_OFFERING[i]);
+        }
+        this.inventory.coins -= OFFERING_GOLD;
+        this.inventory.changed();
+        this.changingMap = true;
+        this.player.setVelocity(0, 0);
+        this.cameras.main.flash(600, 255, 255, 255);
+        this.time.delayedCall(700, () => {
+            this.cameras.main.fadeOut(1200, 255, 255, 255);
+            this.cameras.main.once('camerafadeoutcomplete', () => {
+                this.scene.stop('HotBarScene');
+                this.scene.start('EndingScene', {
+                    day: this.state.day
+                });
+            });
+        });
     }
 
     facingVector() {

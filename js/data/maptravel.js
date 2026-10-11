@@ -34,5 +34,11 @@ export const MAPS = {
         tileset: 'shop',
         tilesetImage: 'shop-tiles',
         region: null
+    },
+    venerablePeak: {
+        tilemap: 'venerable-peak',
+        tileset: 'fortress',
+        tilesetImage: 'fortress-tiles',
+        region: 'venerablePeak'
     }
 };
