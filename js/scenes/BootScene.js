@@ -51,6 +51,8 @@ export default class BootScene extends Phaser.Scene {
         this.load.spritesheet('force-blast', 'assets/sprites/force_blast.png', { frameWidth: 24, frameHeight: 24 });
         this.load.image('light', 'assets/sprites/light.png');
 
+        this.load.spritesheet('lightning', 'assets/sprites/lightning.png', { frameWidth: 80, frameHeight: 16 });
+
         this.load.spritesheet('rock-monster', 'assets/sprites/rock_monster.png', {
             frameWidth: 24,
             frameHeight: 24
@@ -117,6 +119,12 @@ export default class BootScene extends Phaser.Scene {
             frames: this.anims.generateFrameNumbers('force-blast', { frames: [0, 1, 2, 3] }),
             frameRate: 12
         });
+
+        this.anims.create ({
+            key: 'lightning',
+            frames: this.anims.generateFrameNumbers('lightning', { frames: [0, 1, 2, 1, 3] }),
+            frameRate: 16
+        })
 
         const inventory = new Inventory();
         

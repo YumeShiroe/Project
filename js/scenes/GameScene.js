@@ -43,12 +43,12 @@ export default class GameScene extends Phaser.Scene {
         this.physics.world.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
         this.player.setCollideWorldBounds(true);
 
+        this.blockedLayer = null;
         if (this.map.getLayer('blocked')) {
-            const blocked = this.map.createLayer('blocked', tiles).setVisible(false);
-            blocked.setCollisionByExclusion([-1]);
-            this.physics.add.collider(this.player, blocked);
+            this.blockedLayer = this.map.createLayer('blocked', tiles).setVisible(false);
+            this.blockedLayer.setCollisionByExclusion([-1]);
+            this.physics.add.collider(this.player, this.blockedLayer);
         }
-
         this.monsters = this.physics.add.group();
         this.physics.add.collider(this.monsters, this.collisionLayer);
         this.physics.add.overlap(this.player, this.monsters, (player, monster) => {
@@ -119,6 +119,15 @@ export default class GameScene extends Phaser.Scene {
         this.input.keyboard.on('keydown-T', () => {
             this.monsters.children.each(m => m.takeDamageMonster(1, this.player.x, this.player.y));
         });
+        this.input.keyboard.on('keydown-G', () => {
+            const ids = ['swift', 'protection', 'projection', 'blitz', 'luminous'];
+            for (let i = 0; i < ids.length; i++) {
+                const add = this.inventory.addItem(ids[i]);
+                if (!add) {
+                    return;
+                }
+            }
+        });
 
         this.changingMap = false;
         this.createExits();
@@ -130,6 +139,10 @@ export default class GameScene extends Phaser.Scene {
         this.events.on('use-skill', (index) => {
             if (index === 0) {
                 this.castSkillForce();
+            } else if (index === 2) {
+                this.castSkillBlitz();
+            } else if (index === 1) {
+                this.castSkillProjection();
             }
         })
 
@@ -828,12 +841,142 @@ export default class GameScene extends Phaser.Scene {
                         return;
                     if (Phaser.Math.Distance.Between(blast.x, blast.y, monster.x, monster.y) < 18) {
                         hit.add(monster);
-                        monster.takeDamageMonster(3, this.player.x, this.player.y);
+                        monster.takeDamageMonster(2, this.player.x, this.player.y);
                     }
                 });
             },
             onComplete: () => blast.destroy()
         });
+    }
+
+    castSkillBlitz() {
+        if (!this.canCastSkill('blitz', 20)) {
+            return;
+        }
+        const direction = this.facingVector();
+        const fromX = this.player.x;
+        const fromY = this.player.y;
+
+        let toX = fromX;
+        let toY = fromY;
+        for (let step = 4; step <= 80; step += 4) {
+            const nextX = fromX + direction.x * step;
+            const nextY = fromY + direction.y * step;
+            if (this.wallCheck(nextX, nextY + 4)) {
+                break;
+            }
+            toX = nextX;
+            toY = nextY;
+        }
+
+        this.player.setPosition(toX, toY);
+        this.invincibleUntil = Math.max(this.invincibleUntil, this.time.now + 300);
+        this.cameras.main.shake(80, 0.0004);
+        this.lightningTrail(fromX, fromY, toX, toY);
+
+        const path = new Phaser.Geom.Line(fromX, fromY, toX, toY);
+        this.monsters.children.each(monster => {
+            if (monster.dead) {
+                return;
+            }
+            const body = new Phaser.Geom.Circle(monster.x, monster.y, 10);
+            if (Phaser.Geom.Intersects.LineToCircle(path, body)) {
+                monster.takeDamageMonster(1, fromX, fromY, 160);
+            }
+        });
+    }
+
+    castSkillProjection() {
+        const target  = this.nearestMonster(200);
+        if (target === null) {
+            this.floatingText(this.player.x, this.player.y - 16, 'No enemy nearby');
+            return;
+        }
+        if (!this.canCastSkill('projection', 25)) {
+            return;
+        }
+        const clone = this.physics.add.sprite(this.player.x, this.player.y, 'player', 0);
+        clone.setTint(0xb55088);
+        clone.setAlpha(0.75);
+        clone.play('walk-side');
+        let done = false;
+        let chase = null;
+        const finish = () => {
+            if (done) {
+                return;
+            }
+            done = true;
+            chase.remove();
+            clone.setVelocity(0, 0);
+            this.tweens.add({
+                targets: clone,
+                alpha: 0,
+                scale: 1.5,
+                duration: 200,
+                onComplete: () => clone.destroy()
+            });
+        };
+
+        chase = this.time.addEvent({
+            delay: 16,
+            loop: true,
+            callback: () => {
+                if (target.dead || !target.active) {
+                    finish();
+                    return;
+                }
+                this.physics.moveToObject(clone, target, 130);
+                clone.setDepth(clone.y);
+                clone.setFlipX(target.x < clone.x);
+                if (Phaser.Math.Distance.Between(clone.x, clone.y, target.x, target.y) < 14) {
+                    target.takeDamageMonster(3, clone.x, clone.y, 200);
+                    finish();
+                }
+            }
+        });
+        this.time.delayedCall(3000, () => finish());
+    }
+
+    lightningTrail(fromX, fromY, toX, toY) {
+        const distance = Phaser.Math.Distance.Between(fromX, fromY, toX, toY);
+        if (distance < 4) {
+            return;
+        }
+        const bolt = this.add.sprite((fromX + toX) / 2, (fromY + toY) / 2, 'lightning');
+        bolt.setDepth(9500);
+        bolt.setRotation(Math.atan2(toY - fromY, toX - fromX));
+        bolt.setScale(distance / 80, 1);
+        bolt.play('lightning');
+        bolt.once('animationcomplete-lightning', () => bolt.destroy());
+    }
+
+    wallCheck(x, y) {
+        if (this.collisionLayer.getTileAtWorldXY(x, y)) {
+            return true;
+        }
+        if (this.blockedLayer !== null && this.blockedLayer.getTileAtWorldXY(x, y)) {
+            return true;
+        }
+        if (x < 0 || y < 0 || x > this.map.widthInPixels || y > this.map.heightInPixels) {
+            return true;
+        }
+        return false;
+    }
+
+    nearestMonster(range) {
+        let best = null;
+        let bestDistance = range;
+        this.monsters.children.each(monster => {
+            if (monster.dead) {
+                return;
+            }
+            const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, monster.x, monster.y);
+            if (distance < bestDistance) {
+                best = monster;
+                bestDistance = distance;
+            }
+        });
+        return best;
     }
 
     facingVector() {
