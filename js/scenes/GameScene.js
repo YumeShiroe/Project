@@ -100,7 +100,10 @@ export default class GameScene extends Phaser.Scene {
             this.input.keyboard.on('keydown-' + numberKeys[i], () => this.eatFromHotBar(i));
         }
 
-        this.nightOverlay = this.add.rectangle(0, 0, 480, 270, 0x0b0d2b).setOrigin(0).setScrollFactor(0).setDepth(15000).setAlpha(0);
+        this.nightOverlay = this.add.renderTexture(0, 0, 480, 270);
+        this.nightOverlay.setOrigin(0);
+        this.nightOverlay.setScrollFactor(0);
+        this.nightOverlay.setDepth(15000);
         this.updateNight();
 
         this.input.keyboard.on('keydown-N', () => {
@@ -120,7 +123,7 @@ export default class GameScene extends Phaser.Scene {
             this.monsters.children.each(m => m.takeDamageMonster(1, this.player.x, this.player.y));
         });
         this.input.keyboard.on('keydown-G', () => {
-            const ids = ['swift', 'protection', 'projection', 'blitz', 'luminous'];
+            const ids = ['swift', 'luminous', 'projection', 'blitz', 'luminous'];
             for (let i = 0; i < ids.length; i++) {
                 const add = this.inventory.addItem(ids[i]);
                 if (!add) {
@@ -669,9 +672,19 @@ export default class GameScene extends Phaser.Scene {
     updateNight() {
         let darkness = 0;
         if (this.state.time > 0.6) {
-            darkness = (this.state.time - 0.6) / 0.4 * 0.6;
+            darkness = (this.state.time - 0.6) / 0.4 * 0.92;
         }
-        this.nightOverlay.setAlpha(darkness);
+        
+        this.nightOverlay.clear();
+        if (darkness <= 0) {
+            return;
+        }
+        this.nightOverlay.fill(0x0b0d2b, darkness);
+        if (this.learned.has('luminous')) {
+            const screenX = this.player.x - this.cameras.main.scrollX;
+            const screenY = this.player.y - this.cameras.main.scrollY;
+            this.nightOverlay.erase('light', screenX - 48, screenY - 48);
+        }
     }
 
     payMom() {
