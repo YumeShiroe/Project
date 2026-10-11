@@ -3,6 +3,7 @@
 import Inventory from '../features/inventory.js';
 import Hotbar from '../features/hotbar.js';
 import GameState from '../features/gameState.js';
+import { fetchWeather } from '../features/weather.js';
 
 export default class BootScene extends Phaser.Scene {
     constructor() {
@@ -70,7 +71,7 @@ export default class BootScene extends Phaser.Scene {
         });
     }
 
-    create() {
+    async create() {
         this.anims.create ({
             key: 'walk-down',
             frames: this.anims.generateFrameNumbers('player', { frames: [1, 0, 2, 0] }),
@@ -139,6 +140,8 @@ export default class BootScene extends Phaser.Scene {
         
         inventory.coins = 50;
         
+        const weather = await fetchWeather();
+        this.registry.set('weather', weather);
         this.scene.start('GameScene');
     }
 }

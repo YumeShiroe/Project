@@ -9,7 +9,8 @@ export const REGIONS = {
             stonehide: 15,
             force: 15,
             regeneration: 3,
-            luminous: 3
+            luminous: 3,
+            swift: 10
         }
     },
     venerablePeak: {

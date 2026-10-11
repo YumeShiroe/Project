@@ -61,7 +61,13 @@ export default class GameState {
 
     generateBounties() {
         this.bounties = [];
-        const pool = BOUNTY_POOL.slice();
+        const pool = [];
+        for (let i = 0; i < BOUNTY_POOL.length; i++) {
+            const entry = BOUNTY_POOL[i];
+            if (entry.minDay === undefined || this.day >= entry.minDay) {
+                pool.push(entry);
+            }
+        }
         const amount = bountyCount(this.day);
 
         for (let i = 0; i < amount && pool.length > 0; i++) {

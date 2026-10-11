@@ -17,6 +17,21 @@ const skill_y = 186;
 const skill_slot_x = 8;
 const skill_slot_y = 9;
 const SKILL_KEYS = ['J', 'K', 'L'];
+const SKILLS = [
+    {
+        id: 'force', 
+        cost: 10
+    },
+    {
+        id: 'projection',
+        cost: 25,
+    },
+    {
+        id: 'blitz',
+        cost: 20
+    }
+
+];
 
 export default class HotBarScene extends Phaser.Scene {
     constructor() {
@@ -39,6 +54,7 @@ export default class HotBarScene extends Phaser.Scene {
             this.inventory.events.off('changed', onChange);
         });
 
+
         this.state = this.registry.get('state');
         this.add.nineslice(4, 4, 'ui-panel', 0, 120, 24, 12, 12, 12, 12).setOrigin(0);
         this.hudText = this.add.text(14, 16, '', {
@@ -50,10 +66,19 @@ export default class HotBarScene extends Phaser.Scene {
         this.hpFill = this.add.image(status_x + bar_x, status_y + hp_y, 'hp-fill').setOrigin(0);
         this.mpFill = this.add.image(status_x + bar_x, status_y + mp_y, 'mp-fill').setOrigin(0);
 
+        this.learned = this.registry.get('learned');
+        this.skillIcons = [];
+        this.skillLocks = [];
+
         this.add.image(skill_x, skill_y, 'skillbar-ui').setOrigin(0);
         for (let i = 0; i < SKILL_KEYS.length; i++) {
             const sx = skill_x + skill_slot_x;
             const sy = skill_y + skill_slot_y + i * hotbar_distance;
+
+            const icon = this.add.image(sx + 10, sy + 10, 'fungi', FUNGI[SKILLS[i].id].frame);
+            const lock = this.add.image(sx + 10, sy + 10, 'lock');
+            this.skillIcons.push(icon);
+            this.skillLocks.push(lock);
 
             this.add.text(sx + 2, sy + 10, SKILL_KEYS[i], {
                 ...smallPixelText,
@@ -114,5 +139,16 @@ export default class HotBarScene extends Phaser.Scene {
             this.useSkill(1);
         if (Phaser.Input.Keyboard.JustDown(this.skillKeys.L))
             this.useSkill(2);
+
+        for (let i = 0; i < SKILLS.length; i++) {
+            const learned = this.learned.has(SKILLS[i].id);
+            this.skillIcons[i].setVisible(learned);
+            this.skillLocks[i].setVisible(!learned);
+            if (learned && this.state.mp < SKILLS[i].cost) {
+                this.skillIcons[i].setAlpha(0.35);
+            } else {
+                this.skillIcons[i].setAlpha(1);
+            }
+        }
     }
 }

@@ -16,7 +16,7 @@ export const FUNGI = {
         rank: 1,
         tier: 'Mortal',
         type: 'active',
-        value: 10,
+        value: 20,
         glow: null,
         usage: 'permanent',
         description: 'Allow its eater to move like the wind for a short duration.'
@@ -64,7 +64,7 @@ export const FUNGI = {
         rank: 1,
         tier: 'Mortal',
         type: 'valuable',
-        value: 20,
+        value: 35,
         glow: null,
         usage: null,
         description: "This one does nothing. How about selling it for some money instead?"
@@ -76,7 +76,7 @@ export const FUNGI = {
         rank: 2,
         tier: 'Mortal',
         type: 'valuable',
-        value: 40,
+        value: 50,
         glow: null,
         usage: null,
         description: "Silver worths more than bronze, duh."
@@ -100,7 +100,7 @@ export const FUNGI = {
         rank: 6,
         tier: 'Fairy',
         type: 'passive',
-        value: 300,
+        value: 200,
         glow: 0xf6757a,
         usage: 'permanent',
         description: "Am I hallucinating? All the wounds are started to heal."
@@ -112,7 +112,7 @@ export const FUNGI = {
         rank: 7,
         tier: 'Fairy',
         type: 'passive',
-        value: 400,
+        value: 250,
         glow: 0x2ce8f5,
         usage: 'permanent',
         description: "A shield that vow to protect its owner at all cost."
@@ -124,7 +124,7 @@ export const FUNGI = {
         rank: 7,
         tier: 'Fairy',
         type: 'active',
-        value: 500,
+        value: 400,
         glow: 0xb55088,
         usage: 'permanent',
         description: "A mirage of oneself huh? Interesting."
@@ -148,7 +148,7 @@ export const FUNGI = {
         rank: 6,
         tier: 'Fairy',
         type: 'valuable',
-        value: 500,
+        value: 300,
         glow: 0x2ce8f5,
         usage: null,
         description: "They called diamond Unbreakable here? Say that again. - A random jojo fan."
@@ -160,7 +160,7 @@ export const FUNGI = {
         rank: 7,
         tier: 'Fairy',
         type: 'valuable',
-        value: 700,
+        value: 500,
         glow: 0xe43b44,
         usage: null,
         description: "Sell me for money bro."

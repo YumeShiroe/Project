@@ -126,6 +126,8 @@ export default class GameScene extends Phaser.Scene {
         this.nightOverlay.setDepth(15000);
         this.updateNight();
 
+        this.createWeather();
+
         this.input.keyboard.on('keydown-N', () => {
             this.state.time = 0.9;
         });
@@ -174,6 +176,17 @@ export default class GameScene extends Phaser.Scene {
 
         if (data.message) {
             this.time.delayedCall(400, () => this.floatingText(this.player.x, this.player.y - 16, data.message));
+        }
+
+        const weather = this.registry.get('weather');
+        if (this.mapInfo.outdoor && weather.source === 'live') {
+            let text = 'Temperature: ' + weather.temp + '°C';
+            if (weather.kind === 'rain') {
+                text = 'It is raining - fungi grow faster';
+            } else if (weather.kind === 'snow') {
+                text = 'It is snowing';
+            }
+            this.time.delayedCall(900, () => this.floatingText(this.player.x, this.player.y - 16, text));
         }
     }
 
@@ -263,7 +276,12 @@ export default class GameScene extends Phaser.Scene {
         let placed = 0;
         let tries = 0;
 
-        while (placed < region.fungiCount && tries < 1000) {
+        let target = region.fungiCount;
+        if (this.registry.get('weather').kind === 'rain') {
+            target = Math.round(target * 1.3);
+        }
+
+        while (placed < target && tries < 1000) {
             tries++;
             const tx = Phaser.Math.Between(1, this.map.width - 2);
             const ty = Phaser.Math.Between(1, this.map.height - 2);
@@ -1108,6 +1126,73 @@ export default class GameScene extends Phaser.Scene {
                 });
             });
         });
+    }
+
+    createWeather() {
+        const weather = this.registry.get('weather');
+        if (!this.mapInfo.outdoor || weather.kind === 'clear') {
+            return;
+        }
+        if (!this.textures.exists('raindrop')) {
+            const g = this.make.graphics({
+                add: false
+            });
+            g.fillStyle(0x8bb4ff, 1);
+            g.fillRect(0, 0, 1, 5);
+            g.generateTexture('raindrop', 1, 5);
+            g.clear();
+            g.fillStyle(0xffffff, 1);
+            g.fillRect(0, 0, 2, 2);
+            g.generateTexture('snowflake', 2, 2);
+            g.destroy();
+        }
+
+        let config;
+        if (weather.kind === 'rain') {
+            config = {
+                x: {
+                    min: -40,
+                    max: 500
+                },
+                y: -10,
+                lifespan: 900,
+                speedX: -60,
+                speedY: {
+                    min: 300,
+                    max: 400
+                },
+                alpha: 0.5,
+                quantity: 3,
+                frequency: 25
+            };
+        } else if (weather.kind === 'snow') {
+            config = {
+                x: {
+                    min: -40,
+                    max: 500
+                },
+                y: -10,
+                lifespan: 6000,
+                speedX: {
+                    min: -20,
+                    max: 20
+                },
+                speedY: {
+                    min: 25,
+                    max: 45
+                },
+                alpha: 0.8,
+                quantity: 1,
+                frequency: 90
+            }
+        }
+
+        let texture = 'snowflake';
+        if (weather.kind === 'rain') {
+            texture = 'raindrop';
+            this.add.rectangle(0, 0, 480, 270, 0x3a4466, 0.15).setOrigin(0).setScrollFactor(0).setDepth(14500);
+        }
+        this.add.particles(0, 0, texture, config).setScrollFactor(0).setDepth(14600);
     }
 
     facingVector() {

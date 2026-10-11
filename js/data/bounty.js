@@ -46,7 +46,53 @@ export const BOUNTY_POOL = [
         max: 2,
         middleManMin: 0.15,
         middleManMax: 0.3,
-        weight: 3
+        weight: 10,
+        minDay: 2
+    },
+    {
+        id: 'protection',
+        min: 1,
+        max: 2,
+        middleManMin: 0.15,
+        middleManMax: 0.2,
+        weight: 10,
+        minDay: 3
+    },
+    {
+        id: 'projection',
+        min: 1,
+        max: 1,
+        middleManMin: 0.1,
+        middleManMax: 0.2,
+        weight: 5,
+        minDay: 3
+    },
+    {
+        id: 'blitz',
+        min: 1,
+        max: 1,
+        middleManMin: 0.1,
+        middleManMax: 0.15,
+        weight: 5,
+        minDay: 3
+    },
+    {
+        id: 'diamond',
+        min: 1,
+        max: 3,
+        middleManMin: 0.2,
+        middleManMax: 0.3,
+        weight: 10,
+        minDay: 3
+    },
+    {
+        id: 'ruby',
+        min: 1,
+        max: 2,
+        middleManMin: 0.1,
+        middleManMax: 0.15,
+        weight: 5,
+        minDay: 3
     }
 ];
 
