@@ -2,6 +2,7 @@ import { FUNGI } from '../data/fungi.js';
 import { REGIONS } from '../data/region.js';
 import { pixelText, smallPixelText } from '../ui/style.js';
 import { MAPS } from '../data/maptravel.js';
+import RockMonster from '../features/rockMonster.js';
 
 const noSpawnTile = [4, 5];
 
@@ -47,6 +48,13 @@ export default class GameScene extends Phaser.Scene {
             blocked.setCollisionByExclusion([-1]);
             this.physics.add.collider(this.player, blocked);
         }
+
+        this.monsters = this.physics.add.group();
+        this.physics.add.collider(this.monsters, this.collisionLayer);
+        this.physics.add.overlap(this.player, this.monsters, (player, monster) => {
+            if (!monster.dead)
+                this.takeDamage(10, monster.x, monster.y);
+        });
 
         const cam = this.cameras.main;
         if (this.map.widthInPixels <= cam.width && this.map.heightInPixels <= cam.height) {
@@ -105,12 +113,25 @@ export default class GameScene extends Phaser.Scene {
         this.input.keyboard.on('keydown-H', () => {
             this.takeDamage(10, this.player.x + 10, this.player.y);
         });
+        this.input.keyboard.on('keydown-R', () => {
+            this.monsters.add(new RockMonster(this, this.player.x + 60, this.player.y));
+        });
+        this.input.keyboard.on('keydown-T', () => {
+            this.monsters.children.each(m => m.takeDamageMonster(1, this.player.x, this.player.y));
+        });
 
         this.changingMap = false;
         this.createExits();
         this.createInteractions();
         this.events.off('menu-action');
         this.events.on('menu-action', (action) => this.onMenuAction(action));
+
+        this.events.off('use-skill');
+        this.events.on('use-skill', (index) => {
+            if (index === 0) {
+                this.castSkillForce();
+            }
+        })
 
         if (!this.scene.isActive('HotBarScene'))
             this.scene.launch('HotBarScene');
@@ -152,7 +173,15 @@ export default class GameScene extends Phaser.Scene {
         else if (down) vy = 1;
 
         this.player.setVelocity(vx, vy);
-        this.player.body.velocity.normalize().scale(this.speed);
+        let speed = this.speed;
+        if (this.learned.has('swift')) {
+            speed = this.speed * 1.4;
+        }
+        this.player.body.velocity.normalize().scale(speed);
+
+        if (this.learned.has('regeneration')) {
+            this.state.regenHP(delta);
+        }
 
         if (vx !== 0) {
             this.player.anims.play('walk-side', true);
@@ -171,6 +200,10 @@ export default class GameScene extends Phaser.Scene {
         }
         this.updatePickup(delta);
         this.updateInteract();
+        this.monsters.children.iterate(monster => {
+            monster.spot(this.player);
+            monster.setDepth(monster.y);
+        })
     }
 
     pickWeighted(table) {
@@ -419,7 +452,28 @@ export default class GameScene extends Phaser.Scene {
     }
 
     applyFungusEffect(id) {
-        // Nothing for now since ability will be added later
+        let text = null;
+        if (id === 'swift') {
+            text = 'It feels like the wind is with you'
+        } else if (id === 'protection') {
+            this.state.maxHP += 50;
+            this.state.hp += 50;
+            text = 'Your skin is tougher. +50 Max Health';
+        } else if (id === 'regeneration') {
+            text = 'Your wounds begin to heal';
+        } else if (id === 'force') {
+            text = 'Learned Air Blast [J]';
+        } else if (id === 'projection') {
+            text = 'Learned Unstable Clone [K]';
+        } else if (id === 'blitz') {
+            text = 'Learned Flash [L]';
+        } else if (id === 'luminous') {
+            text = 'Darkness is no longer your enemy';
+        }
+
+        if (text) {
+            this.time.delayedCall(600, () => this.floatingText(this.player.x, this.player.y - 16, text));
+        }
     }
 
     findSpawn(name) {
@@ -706,9 +760,105 @@ export default class GameScene extends Phaser.Scene {
         }
     }
 
+    throwRock(fromX, fromY, toX, toY) {
+        const shadow = this.add.image(fromX, fromY, 'rock-shadow').setDepth(1);
+        const rock = this.add.image(fromX, fromY - 12, 'rock').setDepth(9000);
+        const height = 40;
+
+        this.tweens.addCounter({
+            from: 0,
+            to: 1,
+            duration: 900,
+            onUpdate: (tween) => {
+                const t = tween.getValue();
+                const x = Phaser.Math.Linear(fromX, toX, t);
+                const y = Phaser.Math.Linear(fromY, toY, t);
+                const arc = 4 * height * t * (1 - t);
+                shadow.setPosition(x, y);
+                rock.setPosition(x, y - 12 * (1 - t) - arc);
+                rock.setAngle(t * 360);
+            },
+            onComplete: () => {
+                shadow.destroy();
+                rock.destroy();
+                this.cameras.main.shake(60, 0.003);
+                const distance = Phaser.Math.Distance.Between(toX, toY, this.player.x, this.player.y);
+                if (distance < 12)
+                    this.takeDamage(20, toX, toY);
+            }
+        });
+    }
+
     faint() {
-        this.floatingText(this.player.x, this.player.y - 16, 'You fainted...');
         this.state.hp = this.state.maxHP;
+        this.sleep(true);
+    }
+
+    canCastSkill(id, cost) {
+        if (!this.learned.has(id)) {
+            this.floatingText(this.player.x, this.player.y - 16, 'Not Learned');
+            return false;
+        }
+        if (!this.state.spendMP(cost)) {
+            this.floatingText(this.player.x, this.player.y - 16, 'Not Enough Energy');
+            return false;
+        }
+        return true;
+    }
+
+    castSkillForce() {
+        if (!this.canCastSkill('force', 10))
+            return;
+        const direction = this.facingVector();
+        const startX = this.player.x + direction.x * 10;
+        const startY = this.player.y + direction.y * 10;
+
+        const blast = this.add.sprite(startX, startY, 'force-blast').setDepth(9000).setRotation(Math.atan2(direction.y, direction.x));
+        blast.play('force-blast');
+
+        const hit = new Set();
+        this.tweens.add({
+            targets: blast,
+            x: startX + direction.x * 60,
+            y: startY + direction.y * 60,
+            duration: 330,
+            onUpdate: () => {
+                this.monsters.children.each(monster => {
+                    if (monster.dead || hit.has(monster))
+                        return;
+                    if (Phaser.Math.Distance.Between(blast.x, blast.y, monster.x, monster.y) < 18) {
+                        hit.add(monster);
+                        monster.takeDamageMonster(3, this.player.x, this.player.y);
+                    }
+                });
+            },
+            onComplete: () => blast.destroy()
+        });
+    }
+
+    facingVector() {
+        if (this.facing === 'up') {
+            return {
+                x: 0,
+                y: -1
+            };
+        }
+        if (this.facing === 'down') {
+            return {
+                x: 0,
+                y: 1
+            }
+        }
+        if (this.player.flipX) {
+            return {
+                x: -1,
+                y: 0
+            }
+        }
+        return {
+            x: 1,
+            y: 0
+        }
     }
 
     floatingText(x, y, text) {

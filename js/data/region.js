@@ -7,7 +7,8 @@ export const REGIONS = {
             gold: 10,
             stonehide: 15,
             force: 15,
-            regeneration: 5
+            regeneration: 3,
+            luminous: 3
         }
     }
 }

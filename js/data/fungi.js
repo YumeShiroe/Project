@@ -18,7 +18,7 @@ export const FUNGI = {
         type: 'active',
         value: 10,
         glow: null,
-        usage: 'single',
+        usage: 'permanent',
         description: 'Allow its eater to move like the wind for a short duration.'
     },
 
@@ -54,7 +54,7 @@ export const FUNGI = {
         type: 'active',
         value: 75,
         glow: null,
-        usage: 'single',
+        usage: 'permanent',
         description: "Have you seen the shockwave from Saitama's serious punch? This one produces the same force but 1/100 as strong."
     },
 

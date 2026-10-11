@@ -23,6 +23,7 @@ export default class GameState {
         this.hp = this.maxHP;
         this.mp = this.maxMP;
         this.mpRegen = 2;
+        this.hpRegen = 1;
     }
 
     todayCost() {
@@ -116,5 +117,9 @@ export default class GameState {
 
     regenMP(delta) {
         this.mp = Math.min(this.maxMP, this.mp + this.mpRegen * delta / 1000);
+    }
+
+    regenHP(delta) {
+        this.hp = Math.min(this.maxHP, this.hp + this.hpRegen * delta / 1000)
     }
 }

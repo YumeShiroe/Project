@@ -48,6 +48,9 @@ export default class BootScene extends Phaser.Scene {
         this.load.image('mp-fill', 'assets/UI/mp_fill.png');
         this.load.image('skillbar-ui', 'assets/UI/skillbar.png');
 
+        this.load.spritesheet('force-blast', 'assets/sprites/force_blast.png', { frameWidth: 24, frameHeight: 24 });
+        this.load.image('light', 'assets/sprites/light.png');
+
         this.load.spritesheet('rock-monster', 'assets/sprites/rock_monster.png', {
             frameWidth: 24,
             frameHeight: 24
@@ -107,6 +110,12 @@ export default class BootScene extends Phaser.Scene {
             key: 'rock-death',
             frames: this.anims.generateFrameNumbers('rock-monster', { frames: [7, 8, 9, 10] }),
             frameRate: 6
+        });
+
+        this.anims.create ({
+            key: 'force-blast',
+            frames: this.anims.generateFrameNumbers('force-blast', { frames: [0, 1, 2, 3] }),
+            frameRate: 12
         });
 
         const inventory = new Inventory();
