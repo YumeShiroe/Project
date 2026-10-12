@@ -6,8 +6,8 @@ export default class GameState {
         this.day = 1;
         this.time = 0;
         this.dayLength = 300000;
-        this.baseCost = 100;
-        this.costGrowth = 50;
+        this.baseCost = 80;
+        this.costGrowth = 25;
         this.costOverdue = 0;
         this.overdueDays = 0;
         this.maxOverdueDays = 3;

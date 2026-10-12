@@ -174,7 +174,7 @@ export default class BootScene extends Phaser.Scene {
         this.registry.set('musicVolume', musicVolume);
         this.registry.set('sfxVolume', sfxVolume);
         
-        inventory.coins = 50;
+        inventory.coins = 100;
         
         const weather = await fetchWeather();
         this.registry.set('weather', weather);
