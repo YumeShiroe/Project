@@ -6,6 +6,9 @@ import MenuScene from './scenes/MenuScene.js';
 import GameOverScene from './scenes/GameOverScene.js';
 import BountyScene from './scenes/BountyScene.js';
 import EndingScene from './scenes/EndingScene.js';
+import TitleScene from './scenes/TitleScene.js';
+import SettingScene from './scenes/SettingScene.js';
+import ScoreScene from './scenes/ScoreScene.js';
 
 const config = {
     type: Phaser.AUTO,
@@ -24,7 +27,7 @@ const config = {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
     },
-    scene: [BootScene, GameScene, InventoryScene, HotBarScene, MenuScene, GameOverScene, BountyScene, EndingScene]
+    scene: [BootScene, GameScene, InventoryScene, HotBarScene, MenuScene, GameOverScene, BountyScene, EndingScene, SettingScene, TitleScene, ScoreScene]
 };
 
 document.fonts.load('8px "Press Start 2P", "Silkscreen"').then(() => {

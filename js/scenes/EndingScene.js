@@ -1,5 +1,6 @@
 import { playSfx } from "../features/audio.js";
 import { pixelText, smallPixelText } from "../ui/style.js";
+import { addScore } from "../features/score.js";
 
 export default class EndingScene extends Phaser.Scene {
     constructor() {
@@ -7,6 +8,7 @@ export default class EndingScene extends Phaser.Scene {
     }
 
     create(data) {
+        this.result = data;
         this.cameras.main.setBackgroundColor('#181425');
         this.cameras.main.fadeIn(1200, 255, 255, 255);
 
@@ -62,8 +64,25 @@ export default class EndingScene extends Phaser.Scene {
                 yoyo: true,
                 repeat: -1
             });
-            this.input.keyboard.once('keydown-ENTER', () => window.location.reload());
-            this.input.once('pointerdown', () => window.location.reload());
+            this.input.keyboard.once('keydown-ENTER', () => this.signScoreboard());
+            this.input.once('pointerdown', () => this.signScoreboard());
+        });
+    }
+
+    signScoreboard() {
+        if (this.signed) {
+            return;
+        }
+        this.signed = true;
+        let name = window.prompt('Enter your name (10 Letters max): ');
+        if (name === null || name.trim() === '') {
+            name = "FunGuy";
+        }
+        name = name.trim().slice(0, 10);
+        const rank = addScore(name, this.result.day, this.result.gold);
+        this.scene.start('ScoreScene', {
+            fromEnding: true,
+            highlight: rank
         });
     }
 }

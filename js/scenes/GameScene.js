@@ -26,6 +26,25 @@ export default class GameScene extends Phaser.Scene {
 
         playMusic(this, this.mapInfo.music);
 
+        this.inDanger = false;
+        const music = this.registry.get('music');
+        if (music) {
+            music.setRate(1);
+            music.setVolume(this.registry.get('musicVolume'));
+        }
+
+        if (!this.textures.exists('vignette')) {
+            const texture = this.textures.createCanvas('vignette', 480, 270);
+            const context = texture.getContext();
+            const gradient = context.createRadialGradient(240, 135, 70, 240, 135, 290);
+            gradient.addColorStop(0, 'rgba(162, 38, 51, 0)');
+            gradient.addColorStop(1, 'rgba(162, 38, 51, 0.9)');
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, 480, 270);
+            texture.refresh();
+        }
+        this.vignette = this.add.image(0, 0, 'vignette').setOrigin(0).setScrollFactor(0).setDepth(15200).setAlpha(0);
+
         const tiles = this.map.addTilesetImage(this.mapInfo.tileset, this.mapInfo.tilesetImage);
         this.groundLayer = this.map.createLayer('ground', tiles);
         if (this.map.getLayer('grass'))
@@ -231,6 +250,20 @@ export default class GameScene extends Phaser.Scene {
         }
         this.player.body.velocity.normalize().scale(speed);
 
+        const joy = this.registry.get('joystick');
+        if (vx === 0 && vy === 0 && joy) {
+            if (joy.x > 0.4) {
+                vx = 1;
+            } else if (joy.x < -0.4) {
+                vx = -1;
+            }
+            if (joy.y > 0.4) {
+                vy = 1;
+            } else if (joy.y < 0.4) {
+                vy = -1;
+            }
+        }
+
         if (this.learned.has('regeneration')) {
             this.state.regenHP(delta);
         }
@@ -257,6 +290,7 @@ export default class GameScene extends Phaser.Scene {
             monster.setDepth(monster.y);
         })
         this.updateFallingRock();
+        this.updateDanger(time);
     }
 
     pickWeighted(table) {
@@ -609,7 +643,15 @@ export default class GameScene extends Phaser.Scene {
             ...pixelText,
             stroke: '#181425',
             strokeThickness: 2
-        }).setOrigin(0.5).setDepth(20000).setVisible(false);    
+        }).setOrigin(0.5).setDepth(20000).setVisible(false); 
+
+        this.tapInteract = false;
+        this.interactPrompt.setInteractive({
+            useHandCursor: true
+        });
+        this.interactPrompt.on('pointerdown', () => {
+            this.tapInteract = true;
+        });
     }
 
     updateInteract() {
@@ -629,7 +671,8 @@ export default class GameScene extends Phaser.Scene {
         this.interactPrompt.setPosition(this.player.x, this.player.y - 16);
         this.interactPrompt.setVisible(true);
 
-        if (Phaser.Input.Keyboard.JustDown(this.keyE)) {
+        if (Phaser.Input.Keyboard.JustDown(this.keyE) || this.tapInteract) {
+            this.tapInteract = false;
             this.doAction(curr.action);
         }
     }
@@ -1151,7 +1194,8 @@ export default class GameScene extends Phaser.Scene {
             this.cameras.main.once('camerafadeoutcomplete', () => {
                 this.scene.stop('HotBarScene');
                 this.scene.start('EndingScene', {
-                    day: this.state.day
+                    day: this.state.day,
+                    gold: this.inventory.coins
                 });
             });
         });
@@ -1222,6 +1266,38 @@ export default class GameScene extends Phaser.Scene {
             this.add.rectangle(0, 0, 480, 270, 0x3a4466, 0.15).setOrigin(0).setScrollFactor(0).setDepth(14500);
         }
         this.add.particles(0, 0, texture, config).setScrollFactor(0).setDepth(14600);
+    }
+
+    updateDanger(time) {
+        const lowHP = this.state.hp / this.state.maxHP < 0.3;
+        const nearMonster = this.nearestMonster(150) !== null;
+        const danger = lowHP || nearMonster;
+
+        if (danger !== this.inDanger) {
+            this.inDanger = danger;
+            const music = this.registry.get('music');
+            if (music) {
+                const base = this.registry.get('musicVolume');
+                let rate = 1;
+                let volume = base;
+                if (danger) {
+                    rate = 1.2;
+                    volume = Math.min(1, base * 1.3);
+                }
+                this.tweens.add({
+                    targets: music,
+                    rate: rate,
+                    volume: volume,
+                    duration: 600
+                });
+            }
+        }
+
+        if (lowHP) {
+            this.vignette.setAlpha(0.45 + 0.25 * Math.sin(time / 200));
+        } else {
+            this.vignette.setAlpha(0);
+        }
     }
 
     facingVector() {

@@ -90,6 +90,37 @@ export default class HotBarScene extends Phaser.Scene {
             zone.on('pointerdown', () => this.useSkill(i));
         }
         this.skillKeys = this.input.keyboard.addKeys('J,K,L');
+
+        this.isTouch = this.sys.game.device.input.touch;
+        for (let i = 0; i < this.hotbar.slots.length; i++) {
+            const sx = hotbar_x + hotbar_slot_x + i * hotbar_distance;
+            const sy = hotbar_y + hotbar_slot_y;
+            const zone = this.add.zone(sx, sy, 20, 20).setOrigin(0).setInteractive();
+            zone.on('pointerdown', () => {
+                if (!this.scene.isPaused('GameScene')) {
+                    this.scene.get('GameScene').events.emit('eat-slot', i);
+                }
+            });
+        }
+
+        this.registry.set('joystick', {
+            x: 0,
+            y: 0
+        });
+        if (this.isTouch) {
+            this.createJoystick();
+            const bag = this.add.nineslice(24, 40, 'ui-button', 0, 40, 14, 4, 4, 4, 4).setInteractive();
+            this.add.text(24, 40, 'BAG', {
+                ...smallPixelText,
+                stroke: '#181425',
+                strokeThickness: 2
+            });
+            bag.on('pointerdown', () => {
+                if (!this.scene.isPaused('GameScene')) {
+                    this.scene.get('GameScene').events.emit('open-inventory');
+                }
+            });
+        }
     }
 
     useSkill(index) {
@@ -150,5 +181,46 @@ export default class HotBarScene extends Phaser.Scene {
                 this.skillIcons[i].setAlpha(1);
             }
         }
+    }
+
+    createJoystick() {
+        this.input.addPointer(2);
+        this.joyX = 50;
+        this.joyY = 215;
+        this.joyRad = 26;
+        this.add.circle(this.joyX, this.joyY, this.joyRad, 0x181425, 0.35).setStrokeStyle(2, 0xc0cbdc, 0.6);
+        this.joyKnob = this.add.circle(this.joyX, this.joyY, 11, 0xc0cbdc, 0.7);
+        this.joyPointer = null;
+
+        const area = this.add.zone(0, 140, 150, 130).setOrigin(0).setInteractive();
+        area.on('pointerdown', (pointer) => {
+            this.joyPointer = pointer;
+            this.moveKnob(pointer);
+        });
+        this.input.on('pointerup', (pointer) => {
+            if (pointer === this.joyPointer) {
+                this.joyPointer = null;
+                this.joyKnob.setPosition(this.joyX, this.joyY);
+                this.registry.set('joystick', {
+                    x: 0,
+                    y: 0
+                });
+            }
+        });
+    }
+
+    moveKnob(pointer) {
+        let dx = pointer.x - this.joyX;
+        let dy = pointer.y - this.joyY;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        if (length > this.joyRad) {
+            dx = dx / length * this.joyRad;
+            dy = dy / length * this.joyRad;
+        }
+        this.joyKnob.setPositiion(this.joyX + dx, this.joyY + dy);
+        this.registry.set('joystick', {
+            x: dx / this.joyRad,
+            y: dy / this.joyRad
+        });
     }
 }

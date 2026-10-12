@@ -70,6 +70,11 @@ export default class BootScene extends Phaser.Scene {
             frameHeight: 16
         });
 
+        this.load.image('title-bg', 'assets/UI/title_bg.png');
+        this.load.image('settings-bg', 'assets/UI/settings_bg.png');
+        this.load.image('menu-bg', 'assets/UI/menu_bg.png');
+        this.load.image('score-bg', 'assets/UI/score_bg.png');
+
         const MUSIC = ['forest', 'home', 'peak'];
         for (let i = 0; i < MUSIC.length; i++) {
             this.load.audio('music-' + MUSIC[i], [
@@ -155,13 +160,24 @@ export default class BootScene extends Phaser.Scene {
         this.registry.set('hotbar', new Hotbar(inventory));
         this.registry.set('learned', new Set());
         this.registry.set('state', new GameState());
-        this.registry.set('musicVolume', 0.5);
-        this.registry.set('sfxVolume', 0.6);    
+        let musicVolume = 0.5;
+        let sfxVolume = 0.6;
+        try {
+            const saved = JSON.parse(localStorage.getItem('fungiSettings'));
+            if (saved) {
+                musicVolume = saved.musicVolume;
+                sfxVolume = saved.sfxVolume;
+            }
+        }  catch (error) {
+            return;
+        }
+        this.registry.set('musicVolume', musicVolume);
+        this.registry.set('sfxVolume', sfxVolume);
         
         inventory.coins = 50;
         
         const weather = await fetchWeather();
         this.registry.set('weather', weather);
-        this.scene.start('GameScene');
+        this.scene.start('TitleScene');
     }
 }
