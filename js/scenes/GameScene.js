@@ -7,6 +7,7 @@ import { playMusic, stopMusic, playSfx } from '../features/audio.js';
 
 const FUNGI_OFFERING = ['diamond', 'ruby'];
 const OFFERING_GOLD = 1000;
+const DEBUG = false;
 
 export default class GameScene extends Phaser.Scene {
     constructor() {
@@ -147,7 +148,7 @@ export default class GameScene extends Phaser.Scene {
         this.events.on('eat-slot', (index) => this.eatFromHotBar(index));
         this.events.off('open-inventory');
         this.events.on('open-inventory', () => {
-            this.scene.launc('InventoryScene');
+            this.scene.launch('InventoryScene');
             this.scene.pause();
         });
 
@@ -164,31 +165,33 @@ export default class GameScene extends Phaser.Scene {
 
         this.createWeather();
 
-        this.input.keyboard.on('keydown-N', () => {
-            this.state.time = 0.9;
-        });
-        this.input.keyboard.on('keydown-M', () => {
-            this.inventory.coins += 100;
-            this.inventory.changed();
-        });
-        this.input.keyboard.on('keydown-H', () => {
-            this.takeDamage(10, this.player.x + 10, this.player.y);
-        });
-        this.input.keyboard.on('keydown-R', () => {
-            this.monsters.add(new RockMonster(this, this.player.x + 60, this.player.y));
-        });
-        this.input.keyboard.on('keydown-T', () => {
-            this.monsters.children.each(m => m.takeDamageMonster(1, this.player.x, this.player.y));
-        });
-        this.input.keyboard.on('keydown-G', () => {
-            const ids = ['swift', 'luminous', 'projection', 'blitz', 'luminous'];
-            for (let i = 0; i < ids.length; i++) {
-                const add = this.inventory.addItem(ids[i]);
-                if (!add) {
-                    return;
+        if (DEBUG){
+            this.input.keyboard.on('keydown-N', () => {
+                this.state.time = 0.9;
+            });
+            this.input.keyboard.on('keydown-M', () => {
+                this.inventory.coins += 100;
+                this.inventory.changed();
+            });
+            this.input.keyboard.on('keydown-H', () => {
+                this.takeDamage(10, this.player.x + 10, this.player.y);
+            });
+            this.input.keyboard.on('keydown-R', () => {
+                this.monsters.add(new RockMonster(this, this.player.x + 60, this.player.y));
+            });
+            this.input.keyboard.on('keydown-T', () => {
+                this.monsters.children.each(m => m.takeDamageMonster(1, this.player.x, this.player.y));
+            });
+            this.input.keyboard.on('keydown-G', () => {
+                const ids = ['swift', 'luminous', 'projection', 'blitz', 'luminous'];
+                for (let i = 0; i < ids.length; i++) {
+                    const add = this.inventory.addItem(ids[i]);
+                    if (!add) {
+                        return;
+                    }
                 }
-            }
-        });
+            });
+        }
 
         this.changingMap = false;
         this.createExits();
@@ -257,13 +260,6 @@ export default class GameScene extends Phaser.Scene {
         if (up) vy = -1;
         else if (down) vy = 1;
 
-        this.player.setVelocity(vx, vy);
-        let speed = this.speed;
-        if (this.learned.has('swift')) {
-            speed = this.speed * 1.4;
-        }
-        this.player.body.velocity.normalize().scale(speed);
-
         const joy = this.registry.get('joystick');
         if (vx === 0 && vy === 0 && joy) {
             if (joy.x > 0.4) {
@@ -277,6 +273,13 @@ export default class GameScene extends Phaser.Scene {
                 vy = -1;
             }
         }
+
+        this.player.setVelocity(vx, vy);
+        let speed = this.speed;
+        if (this.learned.has('swift')) {
+            speed = this.speed * 1.4;
+        }
+        this.player.body.velocity.normalize().scale(speed);
 
         if (this.learned.has('regeneration')) {
             this.state.regenHP(delta);
@@ -1285,7 +1288,12 @@ export default class GameScene extends Phaser.Scene {
 
     updateDanger(time) {
         const lowHP = this.state.hp / this.state.maxHP < 0.3;
-        const nearMonster = this.nearestMonster(150) !== null;
+        let nearMonster;
+        if (this.inDanger) {
+            nearMonster = this.nearestMonster(200) !== null;
+        } else {
+            nearMonster = this.nearestMonster(150) !== null;
+        }
         const danger = lowHP || nearMonster;
 
         if (danger !== this.inDanger) {
@@ -1296,9 +1304,10 @@ export default class GameScene extends Phaser.Scene {
                 let rate = 1;
                 let volume = base;
                 if (danger) {
-                    rate = 1.2;
+                    rate = 1;
                     volume = Math.min(1, base * 1.3);
                 }
+                this.tweens.killTweensOf(music);
                 this.tweens.add({
                     targets: music,
                     rate: rate,
