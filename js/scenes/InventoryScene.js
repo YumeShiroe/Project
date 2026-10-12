@@ -15,11 +15,13 @@ export default class InventoryScene extends Phaser.Scene {
     }
 
     create() {
+        const tapToClose = this.add.zone(0, 0, 480, 270).setOrigin(0).setInteractive();
+        tapToClose.on('pointerdown', () => this.close());
         this.inventory = this.registry.get('inventory');
         this.add.rectangle(0, 0, 480, 270, 0x181425, 0.6).setOrigin(0);
 
         this.panel = this.add.container(panel_x, panel_y);
-        this.panel.add(this.add.image(0, 0, 'inventory-ui').setOrigin(0));
+        this.panel.add(this.add.image(0, 0, 'inventory-ui').setOrigin(0).setInteractive());
         this.panel.add(this.add.text(99, 7, 'INVENTORY', pixelText).setOrigin(0.5));
         this.highlight = this.add.rectangle(0, 0, 22, 22).setOrigin(0).setStrokeStyle(2, 0xfee761).setVisible(false);
         this.panel.add(this.highlight);
@@ -72,8 +74,27 @@ export default class InventoryScene extends Phaser.Scene {
                 this.hoverId = null;
                 this.hideToolTip();
             });
+            zone.on('pointerdown', () => {
+                this.hoverId = slot.id;
+                this.assignHovered(this.freeHotbarSlot(slot.id));
+            });
             this.panel.add(zone);
         }
+    }
+
+    freeHotbarSlot(id) {
+        for (let i = 0; i < this.hotbar.slots.length; i++) {
+            if (this.hotbar.slots[i] === id) {
+                return i;
+            }
+        }
+
+        for (let i = 0; i< this.hotbar.slots.length; i++) {
+            if (this.hotbar.slots[i] === null) {
+                return i;
+            }
+        }
+        return this.hotbar.slots.length - 1;
     }
 
     drawStatus() {

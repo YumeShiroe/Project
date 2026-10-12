@@ -114,7 +114,7 @@ export default class HotBarScene extends Phaser.Scene {
                 ...smallPixelText,
                 stroke: '#181425',
                 strokeThickness: 2
-            });
+            }).setOrigin(0.5);
             bag.on('pointerdown', () => {
                 if (!this.scene.isPaused('GameScene')) {
                     this.scene.get('GameScene').events.emit('open-inventory');
@@ -197,6 +197,11 @@ export default class HotBarScene extends Phaser.Scene {
             this.joyPointer = pointer;
             this.moveKnob(pointer);
         });
+        this.input.on('pointermove', (pointer) => {
+            if (pointer === this.joyPointer) {
+                this.moveKnob(pointer);
+            }
+        });
         this.input.on('pointerup', (pointer) => {
             if (pointer === this.joyPointer) {
                 this.joyPointer = null;
@@ -217,7 +222,7 @@ export default class HotBarScene extends Phaser.Scene {
             dx = dx / length * this.joyRad;
             dy = dy / length * this.joyRad;
         }
-        this.joyKnob.setPositiion(this.joyX + dx, this.joyY + dy);
+        this.joyKnob.setPosition(this.joyX + dx, this.joyY + dy);
         this.registry.set('joystick', {
             x: dx / this.joyRad,
             y: dy / this.joyRad

@@ -135,7 +135,21 @@ export default class GameScene extends Phaser.Scene {
             this.scene.pause();
         });
         this.events.off('resume');
-        this.events.on('resume', () => this.input.keyboard.resetKeys());
+        this.events.on('resume', () => {
+            this.input.keyboard.resetKeys();
+            this.registry.set('joystick', {
+                x: 0,
+                y: 0
+            });
+        });
+
+        this.events.off('eat-slot');
+        this.events.on('eat-slot', (index) => this.eatFromHotBar(index));
+        this.events.off('open-inventory');
+        this.events.on('open-inventory', () => {
+            this.scene.launc('InventoryScene');
+            this.scene.pause();
+        });
 
         const numberKeys = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'];
         for (let i = 0; i < numberKeys.length; i++) {
@@ -259,7 +273,7 @@ export default class GameScene extends Phaser.Scene {
             }
             if (joy.y > 0.4) {
                 vy = 1;
-            } else if (joy.y < 0.4) {
+            } else if (joy.y < -0.4) {
                 vy = -1;
             }
         }
@@ -664,6 +678,7 @@ export default class GameScene extends Phaser.Scene {
 
         if (curr === null) {
             this.interactPrompt.setVisible(false);
+            this.tapInteract = false;
             return;
         }
 
