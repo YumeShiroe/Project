@@ -21,7 +21,7 @@ export default class BountyScene extends Phaser.Scene {
         this.draw();
         const closeButton = this.add.text(372, 66, 'X', {
             ...pixelText,
-            color: '#733e39',
+            color: '#ffffff',
             padding: {
                 x: 6, 
                 y: 4
