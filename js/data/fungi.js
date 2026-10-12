@@ -112,7 +112,7 @@ export const FUNGI = {
         rank: 7,
         tier: 'Fairy',
         type: 'passive',
-        value: 250,
+        value: 200,
         glow: 0x2ce8f5,
         usage: 'permanent',
         description: "A shield that vow to protect its owner at all cost."
@@ -124,7 +124,7 @@ export const FUNGI = {
         rank: 7,
         tier: 'Fairy',
         type: 'active',
-        value: 400,
+        value: 300,
         glow: 0xb55088,
         usage: 'permanent',
         description: "A mirage of oneself huh? Interesting."
@@ -136,7 +136,7 @@ export const FUNGI = {
         rank: 6,
         tier: 'Fairy',
         type: 'active',
-        value: 350,
+        value: 250,
         glow: 0xfee761,
         usage: 'permanent',
         description: "The decription is too fast to be written down."
@@ -148,7 +148,7 @@ export const FUNGI = {
         rank: 6,
         tier: 'Fairy',
         type: 'valuable',
-        value: 300,
+        value: 200,
         glow: 0x2ce8f5,
         usage: null,
         description: "They called diamond Unbreakable here? Say that again. - A random jojo fan."
@@ -160,7 +160,7 @@ export const FUNGI = {
         rank: 7,
         tier: 'Fairy',
         type: 'valuable',
-        value: 500,
+        value: 300,
         glow: 0xe43b44,
         usage: null,
         description: "Sell me for money bro."

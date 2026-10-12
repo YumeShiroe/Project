@@ -23,7 +23,7 @@ export default class SettingScene extends Phaser.Scene {
         
         for (let i = 0; i < this.rows.length; i++) {
             const y = 110 + i * 24;
-            const label = this.add.text(160, y, this.rows[i].length, {
+            const label = this.add.text(160, y, this.rows[i].label, {
                 ...pixelText,
                 color: '#3e2731'
             });
@@ -82,7 +82,7 @@ export default class SettingScene extends Phaser.Scene {
         this.input.keyboard.on('keydown-D', () => this.change(0.1));
         this.input.keyboard.on('keydown-RIGHT', () => this.change(0.1));
         this.input.keyboard.on('keydown-ENTER', () => this.back());
-        this.input.keyboard.on('keydown-ESE', () => this.back());
+        this.input.keyboard.on('keydown-ESC', () => this.back());
 
     }
 

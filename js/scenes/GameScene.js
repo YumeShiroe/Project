@@ -28,6 +28,7 @@ export default class GameScene extends Phaser.Scene {
         playMusic(this, this.mapInfo.music);
 
         this.inDanger = false;
+        this.lateWarned = false;
         const music = this.registry.get('music');
         if (music) {
             music.setRate(1);

@@ -29,5 +29,6 @@ export default class GameOverScene extends Phaser.Scene {
             color: '#c0cbdc'
         }).setOrigin(0.5);
         this.input.keyboard.once('keydown-R', () => window.location.reload());
+        this.input.once('pointerdown', () => window.location.reload()); 
     }
 }

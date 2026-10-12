@@ -169,7 +169,6 @@ export default class BootScene extends Phaser.Scene {
                 sfxVolume = saved.sfxVolume;
             }
         }  catch (error) {
-            return;
         }
         this.registry.set('musicVolume', musicVolume);
         this.registry.set('sfxVolume', sfxVolume);

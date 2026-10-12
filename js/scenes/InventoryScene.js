@@ -15,14 +15,26 @@ export default class InventoryScene extends Phaser.Scene {
     }
 
     create() {
-        const tapToClose = this.add.zone(0, 0, 480, 270).setOrigin(0).setInteractive();
-        tapToClose.on('pointerdown', () => this.close());
         this.inventory = this.registry.get('inventory');
         this.add.rectangle(0, 0, 480, 270, 0x181425, 0.6).setOrigin(0);
 
         this.panel = this.add.container(panel_x, panel_y);
         this.panel.add(this.add.image(0, 0, 'inventory-ui').setOrigin(0).setInteractive());
         this.panel.add(this.add.text(99, 7, 'INVENTORY', pixelText).setOrigin(0.5));
+        const closeButton = this.add.text(188, 7, 'X', {
+            ...pixelText,
+            padding: {
+                x: 6,
+                y: 4
+            }
+        }).setOrigin(0.5);
+        closeButton.setInteractive({
+            useHandCursor: true
+        });
+        closeButton.on('pointerdown', () => {
+            this.close();
+        });
+        this.panel.add(closeButton);
         this.highlight = this.add.rectangle(0, 0, 22, 22).setOrigin(0).setStrokeStyle(2, 0xfee761).setVisible(false);
         this.panel.add(this.highlight);
 

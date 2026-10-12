@@ -44,7 +44,10 @@ export default class TitleScene extends Phaser.Scene {
                 useHandCursor: true
             });
             button.on('pointerover', () => this.select(i));
-            button.on('pointerdown', () => this.choose());
+            button.on('pointerdown', () => {
+                this.select(i);
+                this.choose();
+            });   
             this.add.text(240, y, this.options[i].label, {
                 ...pixelText,
                 stroke: '#181425',

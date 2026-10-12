@@ -19,6 +19,18 @@ export default class BountyScene extends Phaser.Scene {
 
         this.board = this.add.container(0, 0);
         this.draw();
+        const closeButton = this.add.text(372, 66, 'X', {
+            ...pixelText,
+            color: '#733e39',
+            padding: {
+                x: 6, 
+                y: 4
+            }
+        }).setOrigin(0.5);
+        closeButton.setInteractive({
+            useHandCursor: true
+        });
+        closeButton.on('pointerdown', () => this.close());
 
         this.input.keyboard.on('keydown-W', () => this.select(this.selected - 1));
         this.input.keyboard.on('keydown-UP', () => this.select(this.selected - 1));
@@ -65,11 +77,11 @@ export default class BountyScene extends Phaser.Scene {
                 useHandCursor: true
             });
             zone.on('pointerover', () => {
-                if (this.selected !== i) {
-                    this.select(i);
-                }
+                this.selected = i;
+                this.turnIn();
             });
             zone.on('pointerdown', () => {
+                this.selected = i;
                 this.turnIn();
             });
             const icon = this.add.image(left + 28, y, 'fungi', FUNGI[bounty.id].frame);

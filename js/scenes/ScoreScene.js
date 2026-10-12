@@ -25,7 +25,10 @@ export default class ScoreScene extends Phaser.Scene {
         }
         for (let i = 0; i < scores.length; i++) {
             const y = 78 + i * 18;
-            let style;
+            let style = {
+                ...pixelText,
+                color: '#3e2731'
+            };
             if (i === highlight) {
                 this.add.rectangle(240, y, 270, 16, 0xfee761, 0.6);
                 style = {
@@ -50,7 +53,7 @@ export default class ScoreScene extends Phaser.Scene {
             useHandCursor: true
         });
         back.on('pointerdown', () => {
-            this.back
+            this.back();
         });
         this.add.text(240, 220, 'Back', {
             ...pixelText,

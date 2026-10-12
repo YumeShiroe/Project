@@ -26,7 +26,10 @@ export default class MenuScene extends Phaser.Scene {
 
             const button = this.add.nineslice(240, y, 'ui-button', 0, 110, 15, 4, 4, 4, 4).setInteractive({ useHandCursor: true });
             button.on('pointerover', () => this.select(i));
-            button.on('pointerdown', () => this.choose());
+            button.on('pointerdown', () => {
+                this.select(i);
+                this.choose();
+            });
 
             const label = this.add.text(240, y, this.options[i].label, {
                 ...pixelText,
