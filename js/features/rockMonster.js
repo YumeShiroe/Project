@@ -1,3 +1,5 @@
+import { playSfx } from "./audio.js";
+
 export default class RockMonster extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
         super(scene, x, y, 'rock-monster', 0);
@@ -68,6 +70,7 @@ export default class RockMonster extends Phaser.Physics.Arcade.Sprite {
     takeDamageMonster(damage, fromX, fromY, push = 140) {
         if (this.dead)
             return;
+        playSfx(this.scene, 'monster_hit');
         this.hp -= damage;
         this.busy = true;
         this.anims.stop();
@@ -92,6 +95,7 @@ export default class RockMonster extends Phaser.Physics.Arcade.Sprite {
 
     die() {
         this.dead = true;
+        playSfx(this.scene, 'monster_die');
         this.scene.time.delayedCall(200, () => {
             this.setVelocity(0, 0);
             this.body.enable = false;

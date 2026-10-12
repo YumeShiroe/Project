@@ -3,6 +3,7 @@ import { REGIONS } from '../data/region.js';
 import { pixelText, smallPixelText } from '../ui/style.js';
 import { MAPS } from '../data/maptravel.js';
 import RockMonster from '../features/rockMonster.js';
+import { playMusic, stopMusic, playSfx } from '../features/audio.js';
 
 const FUNGI_OFFERING = ['diamond', 'ruby'];
 const OFFERING_GOLD = 1000;
@@ -22,6 +23,8 @@ export default class GameScene extends Phaser.Scene {
         this.map = this.make.tilemap({
             key: this.mapInfo.tilemap
         });
+
+        playMusic(this, this.mapInfo.music);
 
         const tiles = this.map.addTilesetImage(this.mapInfo.tileset, this.mapInfo.tilesetImage);
         this.groundLayer = this.map.createLayer('ground', tiles);
@@ -399,6 +402,7 @@ export default class GameScene extends Phaser.Scene {
         if (index !== -1) {
             list.splice(index, 1);
         }
+        playSfx(this, 'pickup');
         fungus.destroy();
     }
 
@@ -501,6 +505,7 @@ export default class GameScene extends Phaser.Scene {
             this.learned.add(id);
         }
 
+        playSfx(this, 'eat');
         this.inventory.consume(id);
         this.floatingText(this.player.x, above, 'Ate ' + data.name);
         this.applyFungusEffect(id);
@@ -734,6 +739,7 @@ export default class GameScene extends Phaser.Scene {
             this.floatingText(this.player.x, this.player.y - 16, "Bro you don't have enough :sob:");
             return;
         }
+        playSfx(this, 'coins')
         this.inventory.coins -= due;
         this.inventory.changed();
         this.state.costOverdue = 0;
@@ -747,6 +753,8 @@ export default class GameScene extends Phaser.Scene {
             return;
         this.changingMap = true;
         const stillAlive = this.state.nextDay();
+
+        playSfx(this, 'new_day');
 
         this.cameras.main.fadeOut(600, 0, 0, 0);
         this.cameras.main.once('camerafadeoutcomplete', () => {
@@ -788,9 +796,11 @@ export default class GameScene extends Phaser.Scene {
     buyInventory() {
         const price = this.inventoryPrice();
         if (this.inventory.coins < price) {
+            playSfx(this, 'ui_error');
             this.floatingText(this.player.x, this.player.y - 16, 'Not Enough Gold');
             return;
         }
+        playSfx(this, 'coins');
         this.inventory.coins -= price;
         this.inventory.unlockSlot(2);
         this.inventory.changed();
@@ -803,6 +813,7 @@ export default class GameScene extends Phaser.Scene {
             return;
         if (this.time.now < this.invincibleUntil)
             return;
+        playSfx(this, 'player_takeDamage')
         this.state.hp = Math.max(0, this.state.hp - amount);
         this.invincibleUntil = this.time.now + 1000;
         this.knockbackUntil = this.time.now + 150;
@@ -832,6 +843,8 @@ export default class GameScene extends Phaser.Scene {
         const rock = this.add.image(fromX, fromY - 12, 'rock').setDepth(9000);
         const height = 40;
 
+        playSfx(this, 'rock_throw', 0.6);
+
         this.tweens.addCounter({
             from: 0,
             to: 1,
@@ -846,6 +859,7 @@ export default class GameScene extends Phaser.Scene {
                 rock.setAngle(t * 360);
             },
             onComplete: () => {
+                playSfx(this, 'rock_land', 0.5);
                 shadow.destroy();
                 rock.destroy();
                 this.cameras.main.shake(60, 0.003);
@@ -863,10 +877,12 @@ export default class GameScene extends Phaser.Scene {
 
     canCastSkill(id, cost) {
         if (!this.learned.has(id)) {
+            playSfx(this, 'ui_error');
             this.floatingText(this.player.x, this.player.y - 16, 'Not Learned');
             return false;
         }
         if (!this.state.spendMP(cost)) {
+            playSfx(this, 'ui_error');
             this.floatingText(this.player.x, this.player.y - 16, 'Not Enough Energy');
             return false;
         }
@@ -883,12 +899,14 @@ export default class GameScene extends Phaser.Scene {
         const blast = this.add.sprite(startX, startY, 'force-blast').setDepth(9000).setRotation(Math.atan2(direction.y, direction.x));
         blast.play('force-blast');
 
+        playSfx(this, 'force');
+
         const hit = new Set();
         this.tweens.add({
             targets: blast,
             x: startX + direction.x * 60,
             y: startY + direction.y * 60,
-            duration: 330,
+            duration: 400,
             onUpdate: () => {
                 this.monsters.children.each(monster => {
                     if (monster.dead || hit.has(monster))
@@ -910,6 +928,8 @@ export default class GameScene extends Phaser.Scene {
         const direction = this.facingVector();
         const fromX = this.player.x;
         const fromY = this.player.y;
+
+        playSfx(this, 'blitz');
 
         let toX = fromX;
         let toY = fromY;
@@ -949,6 +969,9 @@ export default class GameScene extends Phaser.Scene {
         if (!this.canCastSkill('projection', 25)) {
             return;
         }
+
+        playSfx(this, 'projection');
+
         const clone = this.physics.add.sprite(this.player.x, this.player.y, 'player', 0);
         clone.setTint(0xb55088);
         clone.setAlpha(0.75);
@@ -1083,6 +1106,8 @@ export default class GameScene extends Phaser.Scene {
         if (distance < 12) {
             this.takeDamage(20, fall.targetX, fall.targetY);
         }
+
+        playSfx(this, 'rock_land', 0.8);
         
         this.tweens.add({
             targets: fall.rock,
@@ -1112,6 +1137,10 @@ export default class GameScene extends Phaser.Scene {
         for (let i = 0; i < FUNGI_OFFERING.length; i++) {
             this.inventory.consume(FUNGI_OFFERING[i]);
         }
+
+        playSfx(this, 'door_open');
+        stopMusic(this);
+
         this.inventory.coins -= OFFERING_GOLD;
         this.inventory.changed();
         this.changingMap = true;

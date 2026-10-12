@@ -1,3 +1,4 @@
+import { playSfx, stopMusic } from "../features/audio.js";
 import { pixelText } from "../ui/style.js";
 
 export default class GameOverScene extends Phaser.Scene {
@@ -8,6 +9,10 @@ export default class GameOverScene extends Phaser.Scene {
     create() {
         const state = this.registry.get('state');
         this.cameras.main.setBackgroundColor('#181425');
+
+        playSfx(this, 'game_over');
+        stopMusic(this);
+
         this.add.text(240, 100, 'GAME OVER', {
             ...pixelText,
             color: '#e43b44',

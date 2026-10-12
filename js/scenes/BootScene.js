@@ -69,6 +69,24 @@ export default class BootScene extends Phaser.Scene {
             frameWidth: 16,
             frameHeight: 16
         });
+
+        const MUSIC = ['forest', 'home', 'peak'];
+        for (let i = 0; i < MUSIC.length; i++) {
+            this.load.audio('music-' + MUSIC[i], [
+                'assets/audio/music/' + MUSIC[i] + '.mp3',
+                'assets/audio/music/' + MUSIC[i] + '.ogg'
+            ]);
+        }
+
+        const SFX = ['pickup', 'eat', 'coins', 'ui_click', 'ui_confirm', 'ui_error', 'player_takeDamage', 'force','monster_hit', 'monster_die', 'rock_throw', 'rock_land', 'blitz', 'projection', 'door_open', 'new_day', 'game_over', 'ending'];
+        for (let i = 0; i < SFX.length; i++) {
+            this.load.audio(SFX[i], [
+                'assets/audio/sfx/' + SFX[i] + '.mp3',
+                'assets/audio/sfx/' + SFX[i] + '.ogg'
+            ]);
+        }
+
+
     }
 
     async create() {
@@ -137,6 +155,8 @@ export default class BootScene extends Phaser.Scene {
         this.registry.set('hotbar', new Hotbar(inventory));
         this.registry.set('learned', new Set());
         this.registry.set('state', new GameState());
+        this.registry.set('musicVolume', 0.5);
+        this.registry.set('sfxVolume', 0.6);    
         
         inventory.coins = 50;
         

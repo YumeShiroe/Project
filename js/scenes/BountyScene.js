@@ -1,4 +1,5 @@
 import { FUNGI } from '../data/fungi.js';
+import { playSfx } from '../features/audio.js';
 import { pixelText, smallPixelText } from '../ui/style.js';
 
 const VISIBLE_ROWS = 4;
@@ -137,8 +138,10 @@ export default class BountyScene extends Phaser.Scene {
         }
 
         if (this.state.turnInBounty(this.selected, this.inventory)) {
+            playSfx(this, 'coins');
             this.flash('+' + bounty.reward + 'G', '#fee761');
         } else {
+            playSfx(this, 'ui_error');
             this.flash('Not Enough', '#e43b44');
         }
         this.draw()

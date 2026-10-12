@@ -1,3 +1,4 @@
+import { playSfx } from "../features/audio.js";
 import { pixelText } from "../ui/style.js";
 
 export default class MenuScene extends Phaser.Scene {
@@ -52,8 +53,10 @@ export default class MenuScene extends Phaser.Scene {
         this.selected = (index + count) % count;
         for (let i = 0; i < this.buttons.length; i++) {
             if (i === this.selected) {
+                playSfx(this, 'ui_confirm');
                 this.buttons[i].setTexture('ui-button-active');
             } else {
+                playSfx(this, 'ui_click');
                 this.buttons[i].setTexture('ui-button');
             }
         }

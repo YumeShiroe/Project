@@ -1,3 +1,4 @@
+import { playSfx } from "../features/audio.js";
 import { pixelText, smallPixelText } from "../ui/style.js";
 
 export default class EndingScene extends Phaser.Scene {
@@ -28,6 +29,8 @@ export default class EndingScene extends Phaser.Scene {
             'As you got home, you were greeted with a familiar figure, your mom finally awake...',
             'It took you ' + data.day + ' days. Congratulation!'
         ];
+
+        playSfx(this, 'ending');
 
         for (let i = 0; i < lines.length; i++) {
             const text = this.add.text(240, 95 + i * 24, lines[i], {
